@@ -257,14 +257,14 @@ parser.add_argument('-o', '--output')
 args = parser.parse_args()
 
 DownloadRss(args.spotify, 'spotify.xml')
-# tree = et.parse('spotify.xml')
-# root = tree.getroot()
-# ExtractSpotify(root, args.output)
+tree = et.parse('spotify.xml')
+root = tree.getroot()
+ExtractSpotify(root, args.output)
 
-# DownloadRss(args.youtube, 'youtube.xml')
-# tree = et.parse('youtube.xml')
-# root = tree.getroot()
-# ExtractYoutube(root, args.output)
+DownloadRss(args.youtube, 'youtube.xml')
+tree = et.parse('youtube.xml')
+root = tree.getroot()
+ExtractYoutube(root, args.output)
 
 # DumpYoutube0(root)
 
