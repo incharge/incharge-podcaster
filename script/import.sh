@@ -24,5 +24,11 @@ python $SCRIPT_DIR/createpages.py \
     --output "$SITEPATH"
 git add "$SITEPATH"
 
-git commit -m "Import podcast episodes from rss feeds"
-git push
+if git diff --cached --quiet --exit-code 
+then
+    echo "Committing and pushing changes"
+    git commit -m "Import podcast episodes from rss feeds"
+    git push
+else
+    echo "Changes NO"
+fi
