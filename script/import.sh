@@ -24,7 +24,7 @@ python $SCRIPT_DIR/createpages.py \
     --output "$SITEPATH"
 git add "$SITEPATH"
 
-if git diff --staged
+if git diff --staged --quiet
 then
     echo "Committing and pushing changes"
     git status
