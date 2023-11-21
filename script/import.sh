@@ -27,7 +27,7 @@ git add "$SITEPATH"
 echo "DEBUG: STATUS"
 git status
 
-if git diff --cached --quiet --exit-code 
+if git diff --cached --quiet
 then
 echo "DEBUG: YES"
     echo "Committing and pushing changes"
