@@ -24,17 +24,12 @@ python $SCRIPT_DIR/createpages.py \
     --output "$SITEPATH"
 git add "$SITEPATH"
 
-echo "DEBUG: STATUS"
-git status
-
-if git diff --cached --quiet
+if git diff --staged
 then
-echo "DEBUG: YES"
     echo "Committing and pushing changes"
     git status
     git commit -m "Import podcast episodes from rss feeds"
     git push
 else
-echo "DEBUG: NO"
     echo "No changes"
 fi
