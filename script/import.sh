@@ -33,6 +33,6 @@ else
     echo "Committing and pushing changes"
     git status
     git commit -m "Import podcast episodes from rss feeds"
-    git push
+    #git push
     IMPORT_RESULT=PUSHED
 fi
