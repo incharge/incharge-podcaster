@@ -26,10 +26,10 @@ git add "$SITEPATH"
 
 if git diff --staged --quiet
 then
+    echo "No changes"
+else
     echo "Committing and pushing changes"
     git status
     git commit -m "Import podcast episodes from rss feeds"
     git push
-else
-    echo "No changes"
 fi
