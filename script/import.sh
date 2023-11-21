@@ -5,6 +5,10 @@
 #set -o xtrace
 #clear
 
+git config --global user.email "noreply@users.noreply.github.com"
+git config --global user.name "import-workflow"
+git config --global init.defaultBranch main
+
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 DATAPATH=$SCRIPT_DIR/../data/episode
