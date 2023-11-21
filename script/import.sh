@@ -25,3 +25,4 @@ python $SCRIPT_DIR/createpages.py \
 git add "$SITEPATH"
 
 git commit -m "Import podcast episodes from rss feeds"
+git push
