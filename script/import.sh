@@ -4,6 +4,8 @@
 # To help debugging....
 #set -o xtrace
 #clear
+
+# .github/workflows/import.yaml calls ./.github/workflows/hugo.yaml if IMPORT_RESULT=PUSHED
 export IMPORT_RESULT=UNDEFINED
 
 git config --global user.email "noreply@users.noreply.github.com"
