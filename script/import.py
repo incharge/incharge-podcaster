@@ -60,6 +60,8 @@ def TestMakeEpisodeId(title, published, expected):
 
 def GetEpisodeNo(title):
     # TODO - max digits?
+    if title.startswith('#482 Lauren Brent'):
+        return 483
     match = re.search(r'^#([0-9]+)', title)
     return int(match.group(1)) if match else 0
 
@@ -322,13 +324,13 @@ if args.spotify is not None:
     ExtractSpotify(root, args.output)
 
 if args.authory is not None:
-    DownloadRss(args.authory, 'authory.xml')
+    #DownloadRss(args.authory, 'authory.xml')
     tree = et.parse('authory.xml')
     root = tree.getroot()
     ExtractAuthory(root, args.output)
 
 if args.youtube is not None:
-    #DownloadRss(args.youtube, 'youtube.xml')
+    DownloadRss(args.youtube, 'youtube.xml')
     tree = et.parse('youtube.xml')
     root = tree.getroot()
     ExtractYoutube(root, args.output)
