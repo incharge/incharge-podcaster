@@ -58,27 +58,35 @@ def TestMakeEpisodeId(title, published, expected):
     else:
         print('OK', id, ' for ', title)
 
+def GetEpisodeNo(title):
+    # TODO - max digits?
+    match = re.search(r'^#([0-9]+)', title)
+    return int(match.group(1)) if match else 0
+
+def MakeEpisodeId(episodeNo):
+    return 'e' + str(episodeNo)
+
 # Create an ID that uniquely identifies this episode across rss feeds from multiple platforms
 # Note: Hugo doesn't allow purly numeric data file names
-def MakeEpisodeId(title, published):
-    # Start with published date
-    id = 'd' + published
+# def MakeEpisodeId(title, published):
+#     # Start with published date
+#     id = 'd' + published
 
-    # Add episode number
-    match = re.search(r'^#([0-9]+)', title)
-    if ( match ):
-        id = id + '-e' + match.group(1)
-    else:
-        # Add part number
-        match = re.search(r'Part ([0-9]+)', title)
-        if match:
-            id = id + '-pt' + match.group(1)
+#     # Add episode number
+#     match = re.search(r'^#([0-9]+)', title)
+#     if ( match ):
+#         id = id + '-e' + match.group(1)
+#     else:
+#         # Add part number
+#         match = re.search(r'Part ([0-9]+)', title)
+#         if match:
+#             id = id + '-pt' + match.group(1)
 
-    return id
+#     return id
 
 # episode is a dictionary containing values to to stored in the data file
 # The dictionary must include id
-def UpdateEpisodeDatafile(episode, output):
+def UpdateEpisodeDatafile(episode, output, source, isMaster = False):
 
     # Get the existing episode data
     dataPath = os.path.join(output, episode['id'] + '.yaml')
@@ -90,11 +98,16 @@ def UpdateEpisodeDatafile(episode, output):
         episode = dataDict | episode
         msg = 'Updating '
     else:
-        dataDict = {}
-        msg = 'Creating '
+        if isMaster:
+            dataDict = {}
+            msg = 'Creating '
+        else:
+            print("WARNING: Missing " + episode['id'] + '.yaml')
+            return
 
     if episode != dataDict:
         # Data has changed, so update the data file
+        #DumpEpisode(episode, msg, source)
         print(msg + dataPath)
         with open(dataPath, 'w', encoding='utf-8') as file:
             yaml.dump(episode, file)
@@ -131,6 +144,12 @@ def NormaliseFilename(strTitle):
     strTitle = re.sub(' ', '-', strTitle)
     return strTitle
 
+# def DumpEpisode(episode, msg, source):
+#     episodeNo = GetEpisodeNo(episode['title'])
+#     #+ episode['title']
+#     print(str(episodeNo) + '\t'  + episode['published'] + '\t' + episode['filename'] + '\t' + msg + '\t' + source)
+
+
 # https://docs.python.org/3/library/time.html#time.strftime
 # %a  Locale’s abbreviated weekday name.
 # %b  Locale’s abbreviated month name.
@@ -162,56 +181,63 @@ def NormaliseDateFormat(strDate):
     return dateDate.strftime(normalisedDateFormat)
 
 def ExtractSpotify(root, output):
-
+    print("Extracting episodes from Spotify feed")
     channel = root.find('channel')
     itunesNamespace = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
     for item in channel.iter('item'):
-        episode = {}
 
         title = item.find('title').text.strip()
-        episode['title'] = title
-        episode['filename'] = NormaliseFilename(title)
+        episodeNo = GetEpisodeNo(title)
+        if episodeNo != 0:
+            episode = {}
+            episode['title'] = title
+            episode['filename'] = NormaliseFilename(title)
 
-        publishedDate = item.find('pubDate').text
-        # episode['spotifypublished'] = publishedDate
-        publishedDate = NormaliseDateFormat(publishedDate)
-        episode['published'] = publishedDate
+            publishedDate = item.find('pubDate').text
+            # episode['spotifypublished'] = publishedDate
+            publishedDate = NormaliseDateFormat(publishedDate)
+            episode['published'] = publishedDate
 
-        episode['id'] = MakeEpisodeId(title, publishedDate)
-        episode['shownotes'] = TrimShownotes(item.find('description').text)
+            #episode['id'] = MakeEpisodeId(title, publishedDate)
+            episode['id'] = MakeEpisodeId(episodeNo)
+            episode['shownotes'] = TrimShownotes(item.find('description').text)
 
-        episode['summary'] = MakeSummary(episode['shownotes'])
-        episode['spotifyAudioUrl'] = item.find('enclosure').attrib['url']
-        episode['spotifyEpisodeUrl'] = item.find('link').text
-        episode['spotifyImageUrl'] = item.find('itunes:image', itunesNamespace).attrib['href']
+            episode['summary'] = MakeSummary(episode['shownotes'])
+            episode['spotifyAudioUrl'] = item.find('enclosure').attrib['url']
+            episode['spotifyEpisodeUrl'] = item.find('link').text
+            episode['spotifyImageUrl'] = item.find('itunes:image', itunesNamespace).attrib['href']
 
-        # # print("guid ", item.find('guid').text)
-        # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
+            # # print("guid ", item.find('guid').text)
+            # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-        UpdateEpisodeDatafile(episode, output)
+            UpdateEpisodeDatafile(episode, output, 'Spotify', True)
 
 def ExtractYoutube(root, output):
     # mediaNamespace = '{http://search.yahoo.com/mrss/}'
     youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
     defaultNamespace = '{http://www.w3.org/2005/Atom}'
 
+    print("Extracting episodes from YouTube feed")
     for item in root.iter(defaultNamespace + 'entry'):
-        episode = {}
 
         title = item.find(defaultNamespace + 'title').text.strip()
-        #episode['title'] = title
-        #episode['filename'] = NormaliseFilename(title)
+        episodeNo = GetEpisodeNo(title)
+        if episodeNo != 0:
+            episode = {}
+            #episode['title'] = title
+            #episode['filename'] = NormaliseFilename(title)
 
-        # 2012-09-10T15:39:02+00:00
-        publishedDate = item.find(defaultNamespace + 'published').text
-        #episode['youtubepublished'] = publishedDate
-        publishedDate = publishedDate[0:10]
-        #episode['published'] = publishedDate
+            # 2012-09-10T15:39:02+00:00
+            #publishedDate = item.find(defaultNamespace + 'published').text
+            #episode['youtubepublished'] = publishedDate
+            #publishedDate = publishedDate[0:10]
+            #episode['published'] = publishedDate
 
-        episode['id'] = MakeEpisodeId(title, publishedDate)
-        episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
+            #episode['id'] = MakeEpisodeId(title, publishedDate)
+            episode['id'] = MakeEpisodeId(episodeNo)
+            episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
 
-        UpdateEpisodeDatafile(episode, output)
+            UpdateEpisodeDatafile(episode, output, 'YouTube')
 
         # print('id=(', item.find('id').text, ')')
         # print('link=(', item.find('link').attrib['href'], ')')
@@ -228,6 +254,38 @@ def ExtractYoutube(root, output):
         # print('media:thumbnail[url]=(', mediaElement.attrib['url'], ')')
         # print('media:thumbnail[width]=(', mediaElement.attrib['width'], ')')
         # print('media:thumbnail[height]=(', mediaElement.attrib['height'], ')')
+
+# Extract the video ID from a link in the format
+# https://www.youtube.com/watch?v=610dKJEbbL0
+def YoutubeLinkToId(link):
+    return re.sub(r'^.*?v=', '', link)
+
+def ExtractAuthory(root, output):
+    # mediaNamespace = '{http://search.yahoo.com/mrss/}'
+    #youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
+    #defaultNamespace = '{http://www.w3.org/2005/Atom}'
+
+    print("Extracting episodes from Authory feed")
+    channel = root.find('channel')
+    for item in channel.iter('item'):
+        title = item.find('title').text.strip()
+        episodeNo = GetEpisodeNo(title)
+        if episodeNo != 0:
+            episode = {}
+
+            #episode['title'] = title
+            #episode['filename'] = NormaliseFilename(title)
+
+            #publishedDate = item.find('pubDate').text
+            # episode['spotifypublished'] = publishedDate
+            #publishedDate = NormaliseDateFormat(publishedDate)
+            #episode['published'] = publishedDate
+
+            #episode['id'] = MakeEpisodeId(title, publishedDate)
+            episode['id'] = MakeEpisodeId(episodeNo)
+            episode['youtubeid'] = YoutubeLinkToId(item.find('link').text)
+
+            UpdateEpisodeDatafile(episode, output, 'Authory')
 
 # def DumpYoutube0(root):
 #     for entry in root:
@@ -254,17 +312,26 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--spotify')
 parser.add_argument('-y', '--youtube')
 parser.add_argument('-o', '--output')
+parser.add_argument('-a', '--authory')
 args = parser.parse_args()
 
-DownloadRss(args.spotify, 'spotify.xml')
-tree = et.parse('spotify.xml')
-root = tree.getroot()
-ExtractSpotify(root, args.output)
+if args.spotify is not None:
+    DownloadRss(args.spotify, 'spotify.xml')
+    tree = et.parse('spotify.xml')
+    root = tree.getroot()
+    ExtractSpotify(root, args.output)
 
-DownloadRss(args.youtube, 'youtube.xml')
-tree = et.parse('youtube.xml')
-root = tree.getroot()
-ExtractYoutube(root, args.output)
+if args.authory is not None:
+    DownloadRss(args.authory, 'authory.xml')
+    tree = et.parse('authory.xml')
+    root = tree.getroot()
+    ExtractAuthory(root, args.output)
+
+if args.youtube is not None:
+    #DownloadRss(args.youtube, 'youtube.xml')
+    tree = et.parse('youtube.xml')
+    root = tree.getroot()
+    ExtractYoutube(root, args.output)
 
 # DumpYoutube0(root)
 
