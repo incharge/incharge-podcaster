@@ -36,5 +36,6 @@ else
     echo "Committing and pushing changes"
     git commit -m "Import podcast episodes from rss feeds"
     git push
+    git remote -v
     IMPORT_RESULT=PUSHED
 fi
