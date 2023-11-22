@@ -5,6 +5,10 @@
 #set -o xtrace
 #clear
 
+# To recreate all files from scratch
+# - Uncomment the 'Removing existing' blocks
+# Also import Authory - Add parameter to the import: --authory 'local-file' \
+
 # .github/workflows/import.yaml calls ./.github/workflows/hugo.yaml if IMPORT_RESULT=PUSHED
 export IMPORT_RESULT=UNDEFINED
 
@@ -25,15 +29,14 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Import podcast episodes from rss feeds to yaml files
 DATAPATH=$SCRIPT_DIR/../data/episode
-if ls $DATAPATH/*.yaml >/dev/null 2>&1
-then 
-    echo "Removing existing .yaml files from $DATAPATH"
-    rm $DATAPATH/*.yaml
-fi
+# if ls $DATAPATH/*.yaml >/dev/null 2>&1
+# then 
+#     echo "Removing existing .yaml files from $DATAPATH"
+#     rm $DATAPATH/*.yaml
+# fi
 python $SCRIPT_DIR/import.py \
     --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
     --youtube 'https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg' \
-    --authory 'local-file' \
     --output "$DATAPATH"
 if [ $? -ne 0 ]
 then
@@ -43,11 +46,11 @@ fi
 
 # Process yaml files into md files
 SITEPATH=$SCRIPT_DIR/../content/episodes
-if ls SITEPATH/*.md >/dev/null 2>&1
-then 
-    echo "Removing existing .md files from $SITEPATH"
-    rm $SITEPATH/*.yaml
-fi
+# if ls SITEPATH/*.md >/dev/null 2>&1
+# then 
+#     echo "Removing existing .md files from $SITEPATH"
+#     rm $SITEPATH/*.yaml
+# fi
 python $SCRIPT_DIR/createpages.py \
     --input "$DATAPATH" \
     --output "$SITEPATH"
@@ -58,7 +61,6 @@ then
     exit
 fi
 
-exit
 # If there are changes then commit them
 git add "$DATAPATH"
 git add "$SITEPATH"
