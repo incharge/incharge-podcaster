@@ -34,6 +34,8 @@ then
     IMPORT_RESULT=NOCHANGES
 else
     echo "Committing and pushing changes"
+    echo "DEBUG-REMOTE"
+    git remote -v
     git commit -m "Import podcast episodes from rss feeds"
     git push
     git remote -v
