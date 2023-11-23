@@ -58,7 +58,7 @@ SITEPATH=$SCRIPT_DIR/../content/episodes
 if $RECREATE && ls SITEPATH/*.md >/dev/null 2>&1
 then 
     echo "Removing existing .md files from $SITEPATH"
-    rm $SITEPATH/*.yaml
+    rm $SITEPATH/*.md
 fi
 python $SCRIPT_DIR/createpages.py \
     --input "$DATAPATH" \
