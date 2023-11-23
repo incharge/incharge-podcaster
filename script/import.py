@@ -20,6 +20,27 @@ def DownloadRss(url, path):
 def TrimShownotes(shownotes):
     # Remove 'Support the channel'
     # 426+
+    shownotes = re.sub(r"------------------Support the channel------------.*enlites\.com/\n", '', shownotes, flags=re.DOTALL)
+    # Up to 167-391
+    shownotes = re.sub(r"------------------Support the channel------------.*anchor\.fm/thedissenter\n", '', shownotes, flags=re.DOTALL)
+    # 1-145, 392-425
+    shownotes = re.sub(r"------------------Support the channel------------.*twitter\.com/TheDissenterYT\n", '', shownotes, flags=re.DOTALL)
+
+    # Remove credits from the end
+    shownotes = re.sub(r'[-]*\nA HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
+
+    # Horizontal rules
+    shownotes = re.sub(r'\n *-[-]+ *\n', '\n\n---\n\n', shownotes)
+
+    # Add 2 spaces before single lime breaks, so they don't wrap
+    shownotes = re.sub(r'([^\n])\n([^\n])', r'\1  \n\2', shownotes)
+
+    # print('Trimmed shownotes: ', shownotes)
+    return shownotes
+
+def TrimShownotesHtml(shownotes):
+    # Remove 'Support the channel'
+    # 426+
     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
     # Up to 167-391
     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
@@ -202,9 +223,7 @@ def ExtractSpotify(root, output):
 
             #episode['id'] = MakeEpisodeId(title, publishedDate)
             episode['id'] = MakeEpisodeId(episodeNo)
-            episode['shownotes'] = TrimShownotes(item.find('description').text)
 
-            episode['summary'] = MakeSummary(episode['shownotes'])
             episode['spotifyAudioUrl'] = item.find('enclosure').attrib['url']
             episode['spotifyEpisodeUrl'] = item.find('link').text
             episode['spotifyImageUrl'] = item.find('itunes:image', itunesNamespace).attrib['href']
@@ -212,10 +231,10 @@ def ExtractSpotify(root, output):
             # # print("guid ", item.find('guid').text)
             # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-            UpdateEpisodeDatafile(episode, output, 'Spotify', True)
+            UpdateEpisodeDatafile(episode, output, 'Spotify', False)
 
 def ExtractYoutube(root, output):
-    # mediaNamespace = '{http://search.yahoo.com/mrss/}'
+    mediaNamespace = '{http://search.yahoo.com/mrss/}'
     youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
     defaultNamespace = '{http://www.w3.org/2005/Atom}'
 
@@ -226,26 +245,29 @@ def ExtractYoutube(root, output):
         episodeNo = GetEpisodeNo(title)
         if episodeNo != 0:
             episode = {}
-            #episode['title'] = title
-            #episode['filename'] = NormaliseFilename(title)
+            episode['id'] = MakeEpisodeId(episodeNo)
+            episode['title'] = title
 
             # 2012-09-10T15:39:02+00:00
-            #publishedDate = item.find(defaultNamespace + 'published').text
+            publishedDate = item.find(defaultNamespace + 'published').text
             #episode['youtubepublished'] = publishedDate
-            #publishedDate = publishedDate[0:10]
-            #episode['published'] = publishedDate
+            publishedDate = publishedDate[0:10]
+            episode['published'] = publishedDate
 
-            #episode['id'] = MakeEpisodeId(title, publishedDate)
-            episode['id'] = MakeEpisodeId(episodeNo)
+            mediaGroup = item.find(mediaNamespace + 'group')
+            episode['shownotes'] = TrimShownotes(mediaGroup.find(mediaNamespace + 'description').text)
+
+            episode['filename'] = NormaliseFilename(title)
+            episode['summary'] = MakeSummary(episode['shownotes'])
+
             episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
 
-            UpdateEpisodeDatafile(episode, output, 'YouTube')
+            UpdateEpisodeDatafile(episode, output, 'YouTube', True)
 
         # print('id=(', item.find('id').text, ')')
         # print('link=(', item.find('link').attrib['href'], ')')
         # print('updated=(', item.find('updated').text, ')')
         # mediaGroup = item.find(mediaNamespace + 'group')
-        # print('media:description=(', mediaGroup.find(mediaNamespace + 'description').text, ')')
 
         # mediaElement = mediaGroup.find(mediaNamespace + 'content')
         # print('media:content[url]=(', mediaElement.attrib['url'], ')')
@@ -272,22 +294,25 @@ def ExtractAuthory(root, output):
     for item in channel.iter('item'):
         title = item.find('title').text.strip()
         episodeNo = GetEpisodeNo(title)
-        if episodeNo != 0:
+        if episodeNo != 0 and episodeNo > 850:
             episode = {}
-
-            #episode['title'] = title
-            #episode['filename'] = NormaliseFilename(title)
-
-            #publishedDate = item.find('pubDate').text
-            # episode['spotifypublished'] = publishedDate
-            #publishedDate = NormaliseDateFormat(publishedDate)
-            #episode['published'] = publishedDate
-
-            #episode['id'] = MakeEpisodeId(title, publishedDate)
             episode['id'] = MakeEpisodeId(episodeNo)
+            episode['title'] = title
+
+            publishedDate = item.find('pubDate').text
+            # episode['spotifypublished'] = publishedDate
+            publishedDate = NormaliseDateFormat(publishedDate)
+            episode['published'] = publishedDate
+
+            #episode['shownotes'] = TrimShownotes(item.find('description').text)
+            episode['shownotes'] = item.find('description').text
+
+            episode['filename'] = NormaliseFilename(title)
+            episode['summary'] = MakeSummary(episode['shownotes'])
+
             episode['youtubeid'] = YoutubeLinkToId(item.find('link').text)
 
-            UpdateEpisodeDatafile(episode, output, 'Authory')
+            UpdateEpisodeDatafile(episode, output, 'Authory', True)
 
 # def DumpYoutube0(root):
 #     for entry in root:
@@ -317,23 +342,23 @@ parser.add_argument('-o', '--output')
 parser.add_argument('-a', '--authory')
 args = parser.parse_args()
 
-if args.spotify is not None:
-    DownloadRss(args.spotify, 'spotify.xml')
-    tree = et.parse('spotify.xml')
-    root = tree.getroot()
-    ExtractSpotify(root, args.output)
-
 if args.authory is not None:
     #DownloadRss(args.authory, 'authory.xml')
     tree = et.parse('authory.xml')
     root = tree.getroot()
     ExtractAuthory(root, args.output)
 
-if args.youtube is not None:
-    DownloadRss(args.youtube, 'youtube.xml')
-    tree = et.parse('youtube.xml')
+# if args.youtube is not None:
+#     # DownloadRss(args.youtube, 'youtube.xml')
+#     tree = et.parse('youtube.xml')
+#     root = tree.getroot()
+#     ExtractYoutube(root, args.output)
+
+if args.spotify is not None:
+    # DownloadRss(args.spotify, 'spotify.xml')
+    tree = et.parse('spotify.xml')
     root = tree.getroot()
-    ExtractYoutube(root, args.output)
+    ExtractSpotify(root, args.output)
 
 # DumpYoutube0(root)
 
