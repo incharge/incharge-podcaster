@@ -7,6 +7,9 @@ import yaml
 import os
 import urllib.request
 
+from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
+
 def DownloadRss(url, path):
     print('Downloading ' + url)
     urllib.request.urlretrieve(url, path)
@@ -25,6 +28,9 @@ def TrimShownotes(shownotes):
     shownotes = re.sub(r"------------------Support the channel------------.*anchor\.fm/thedissenter\n", '', shownotes, flags=re.DOTALL)
     # 1-145, 392-425
     shownotes = re.sub(r"------------------Support the channel------------.*twitter\.com/TheDissenterYT\n", '', shownotes, flags=re.DOTALL)
+
+    # Remove whitespace from the start
+    shownotes = re.sub(r'^[\n]*', '', shownotes)
 
     # Remove credits from the end
     shownotes = re.sub(r'[-]*\nA HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
@@ -83,6 +89,11 @@ def GetEpisodeNo(title):
     # TODO - max digits?
     if title.startswith('#482 Lauren Brent'):
         return 483
+    if title.startswith('731 '):
+        return 731
+    if title.startswith('734 '):
+        return 734
+        
     match = re.search(r'^#([0-9]+)', title)
     return int(match.group(1)) if match else 0
 
@@ -281,38 +292,83 @@ def ExtractYoutube(root, output):
 
 # Extract the video ID from a link in the format
 # https://www.youtube.com/watch?v=610dKJEbbL0
-def YoutubeLinkToId(link):
-    return re.sub(r'^.*?v=', '', link)
+# def YoutubeLinkToId(link):
+#     return re.sub(r'^.*?v=', '', link)
 
-def ExtractAuthory(root, output):
-    # mediaNamespace = '{http://search.yahoo.com/mrss/}'
-    #youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
-    #defaultNamespace = '{http://www.w3.org/2005/Atom}'
+# def ExtractAuthory(root, output):
+#     # mediaNamespace = '{http://search.yahoo.com/mrss/}'
+#     #youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
+#     #defaultNamespace = '{http://www.w3.org/2005/Atom}'
 
-    print("Extracting episodes from Authory feed")
-    channel = root.find('channel')
-    for item in channel.iter('item'):
-        title = item.find('title').text.strip()
-        episodeNo = GetEpisodeNo(title)
-        if episodeNo != 0 and episodeNo > 850:
-            episode = {}
-            episode['id'] = MakeEpisodeId(episodeNo)
-            episode['title'] = title
+#     print("Extracting episodes from Authory feed")
+#     channel = root.find('channel')
+#     for item in channel.iter('item'):
+#         title = item.find('title').text.strip()
+#         episodeNo = GetEpisodeNo(title)
+#         if episodeNo != 0: # and episodeNo > 850
+#             episode = {}
+#             episode['id'] = MakeEpisodeId(episodeNo)
+#             episode['title'] = title
 
-            publishedDate = item.find('pubDate').text
-            # episode['spotifypublished'] = publishedDate
-            publishedDate = NormaliseDateFormat(publishedDate)
-            episode['published'] = publishedDate
+#             publishedDate = item.find('pubDate').text
+#             # episode['spotifypublished'] = publishedDate
+#             publishedDate = NormaliseDateFormat(publishedDate)
+#             episode['published'] = publishedDate
 
-            #episode['shownotes'] = TrimShownotes(item.find('description').text)
-            episode['shownotes'] = item.find('description').text
+#             #episode['shownotes'] = TrimShownotes(item.find('description').text)
+#             episode['shownotes'] = TrimShownotes(item.find('description').text)
 
-            episode['filename'] = NormaliseFilename(title)
-            episode['summary'] = MakeSummary(episode['shownotes'])
+#             episode['filename'] = NormaliseFilename(title)
+#             episode['summary'] = MakeSummary(episode['shownotes'])
 
-            episode['youtubeid'] = YoutubeLinkToId(item.find('link').text)
+#             episode['youtubeid'] = YoutubeLinkToId(item.find('link').text)
 
-            UpdateEpisodeDatafile(episode, output, 'Authory', True)
+#             UpdateEpisodeDatafile(episode, output, 'Authory', True)
+
+def ExtractYoutubeApi(playlistId, apiKey, output):
+    youtube = build('youtube', 'v3', developerKey=apiKey)
+
+    # Equivalent to: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UUTUcatGD6xu4tAcxG-1D4Bg&key=<SPI_KEY>
+    playlistitems_list_request = youtube.playlistItems().list(
+        playlistId = playlistId,
+        part = 'snippet',
+        maxResults = 50
+    )
+
+    print("Extracting episodes via YouTube API")
+    #print( 'Videos in list %s' % uploads_playlist_id)
+    while playlistitems_list_request:
+        # Fetch the next page
+        playlistitems_list_response = playlistitems_list_request.execute()
+
+        for playlist_item in playlistitems_list_response['items']:
+            title = playlist_item['snippet']['title'].strip()
+            episodeNo = GetEpisodeNo(title)
+            if episodeNo != 0: # and episodeNo > 850:
+                episode = {}
+                episode['id'] = MakeEpisodeId(episodeNo)
+                episode['title'] = title
+
+                publishedDate = playlist_item['snippet']['publishedAt']
+                publishedDate = publishedDate[0:10]
+                episode['published'] = publishedDate
+
+                episode['shownotes'] = TrimShownotes(playlist_item['snippet']['description'])
+
+                episode['filename'] = NormaliseFilename(title)
+                episode['summary'] = MakeSummary(episode['shownotes'])
+
+                episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
+
+                UpdateEpisodeDatafile(episode, output, 'Authory', True)
+
+        # if episodeNo < 850:
+        #     return
+        # else:
+
+        # Set up the query for the next page
+        playlistitems_list_request = youtube.playlistItems().list_next(
+            playlistitems_list_request, playlistitems_list_response)
 
 # def DumpYoutube0(root):
 #     for entry in root:
@@ -337,25 +393,32 @@ def ExtractAuthory(root, output):
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--spotify')
-parser.add_argument('-y', '--youtube')
+parser.add_argument('--youtubeapi')     # The ID of the Upload playlist
+parser.add_argument('-y', '--youtuberss')
 parser.add_argument('-o', '--output')
 parser.add_argument('-a', '--authory')
 args = parser.parse_args()
 
-if args.authory is not None:
-    #DownloadRss(args.authory, 'authory.xml')
-    tree = et.parse('authory.xml')
-    root = tree.getroot()
-    ExtractAuthory(root, args.output)
+if args.youtubeapi is not None:
+    if not 'GOOGLE_API_KEY' in os.environ:
+        print("ERROR: Define environment variable: GOOGLE_API_KEY")
+        sys.exit()
+    ExtractYoutubeApi(args.youtubeapi, os.environ['GOOGLE_API_KEY'], args.output)
 
-# if args.youtube is not None:
-#     # DownloadRss(args.youtube, 'youtube.xml')
-#     tree = et.parse('youtube.xml')
+# if args.authory is not None:
+#     #DownloadRss(args.authory, 'authory.xml')
+#     tree = et.parse('authory.xml')
 #     root = tree.getroot()
-#     ExtractYoutube(root, args.output)
+#     ExtractAuthory(root, args.output)
+
+if args.youtuberss is not None:
+    DownloadRss(args.youtuberss, 'youtuberss.xml')
+    tree = et.parse('youtuberss.xml')
+    root = tree.getroot()
+    ExtractYoutube(root, args.output)
 
 if args.spotify is not None:
-    # DownloadRss(args.spotify, 'spotify.xml')
+    DownloadRss(args.spotify, 'spotify.xml')
     tree = et.parse('spotify.xml')
     root = tree.getroot()
     ExtractSpotify(root, args.output)

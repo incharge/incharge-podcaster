@@ -5,15 +5,14 @@
 #set -o xtrace
 #clear
 
-# To recreate all files from scratch
-# - Uncomment the 'Removing existing' blocks
-# Also import Authory - Add parameter to the import: --authory 'local-file' \
-
 # .github/workflows/import.yaml calls ./.github/workflows/hugo.yaml if IMPORT_RESULT=PUSHED
 export IMPORT_RESULT=UNDEFINED
-RECREATE=True
-#RECREATE=False
-DEPLOY=False
+# Recreate all files from scratch.  All existing episode .yaml an .md files are deleted before recreating
+RECREATE=False
+#RECREATE=True
+# Commit and push changes?
+#DEPLOY=False
+DEPLOY=True
 
 # Configure git
 git config --global user.email "noreply@users.noreply.github.com"
@@ -38,10 +37,15 @@ then
     rm $DATAPATH/*.yaml
 fi
 
-if $RECREATE; then AUTHORY="--authory 'local-file'"; else AUTHORY=''; fi
+if $RECREATE
+then
+    YOUTUBE_PARAM='--youtubeapi=UUTUcatGD6xu4tAcxG-1D4Bg'
+else
+    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
+fi
 python $SCRIPT_DIR/import.py \
-    $AUTHORY --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
-    --youtube 'https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg' \
+    $YOUTUBE_PARAM \
+    --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
     --output "$DATAPATH"
 if [ $? -ne 0 ]
 then
