@@ -1,6 +1,6 @@
 import argparse
 import sys
-import xml.etree.ElementTree as et
+import xml.etree.ElementTree as et # See https://docs.python.org/3/library/xml.etree.elementtree.html
 import datetime
 import re
 import yaml
