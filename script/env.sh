@@ -2,7 +2,12 @@
 #set -o xtrace
 cd -- "$( dirname -- "${BASH_SOURCE[0]}" )"
 cd ..
-python -m venv .venv
-source .venv/Scripts/activate
-python -m pip install --upgrade pip
-python -m pip install -r script/requirements.txt
+ if [ ! -d .venv ]; then
+    python -m venv .venv
+    source .venv/Scripts/activate
+    python -m pip install --upgrade pip
+    python -m pip install -r script/requirements.txt
+fi
+git config --global init.defaultBranch main
+git config --global credential.helper wincred
+git config pull.rebase false
