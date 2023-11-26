@@ -72,6 +72,8 @@ def TrimShownotesHtml(shownotes):
     return shownotes
 
 def MakeSummary(summary):
+    # Don't use 'RECORDED ON' as the summary
+    summary = re.sub(r"^RECORDED ON.*\n", '', summary)
     # Extract the first line
     summary = re.sub(r"\n.*$", '', summary, flags=re.DOTALL)
     # Remove HTML tags
