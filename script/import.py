@@ -359,6 +359,7 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['summary'] = MakeSummary(episode['shownotes'])
 
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
+                episode['featured_image'] = playlist_item['snippet']['thumbnails']['standard']['url']
 
                 UpdateEpisodeDatafile(episode, output, 'Authory', True)
 

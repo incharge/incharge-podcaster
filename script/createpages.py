@@ -14,6 +14,8 @@ def CreatePage(input, output):
         'id': dataDict['id'],
         'date': dataDict['published'],
         'summary': dataDict['summary'],
+        'featured_image': dataDict['featured_image'],
+
         'draft': 'false',
     }
 
