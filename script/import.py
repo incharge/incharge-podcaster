@@ -272,6 +272,7 @@ def ExtractYoutube(root, output):
             episode['summary'] = MakeSummary(episode['shownotes'])
 
             episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
+            episode['featured_image'] = mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url']
 
             UpdateEpisodeDatafile(episode, output, 'YouTube', True)
 
@@ -359,7 +360,7 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['summary'] = MakeSummary(episode['shownotes'])
 
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
-                episode['featured_image'] = playlist_item['snippet']['thumbnails']['standard']['url']
+                episode['featured_image'] = playlist_item['snippet']['thumbnails']['high']['url']
 
                 UpdateEpisodeDatafile(episode, output, 'Authory', True)
 
