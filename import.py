@@ -102,6 +102,12 @@ def GetEpisodeNo(title):
 def MakeEpisodeId(episodeNo):
     return 'e' + str(episodeNo)
 
+# Replace youtube's randomly allocated load-balancing subdomains with the master
+# to avoid the field's values changing and being updated
+# e.g. https://i2.ytimg.com/ with https://i.ytimg.com/
+def NormaliseImageUrl(url):
+    return re.sub(r'^(https://i)[0-9]+(.ytimg.com/)', r'\1\2', url)
+
 # Create an ID that uniquely identifies this episode across rss feeds from multiple platforms
 # Note: Hugo doesn't allow purly numeric data file names
 # def MakeEpisodeId(title, published):
@@ -274,7 +280,7 @@ def ExtractYoutube(root, output):
             episode['excerpt'] = MakeSummary(episode['shownotes'])
 
             episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
-            episode['image'] = mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url']
+            episode['image'] = NormaliseImageUrl(mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url'])
 
             UpdateEpisodeDatafile(episode, output, 'YouTube', True)
 
@@ -362,7 +368,7 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['excerpt'] = MakeSummary(episode['shownotes'])
 
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
-                episode['image'] = playlist_item['snippet']['thumbnails']['high']['url']
+                episode['image'] = NormaliseImageUrl(playlist_item['snippet']['thumbnails']['high']['url'])
 
                 UpdateEpisodeDatafile(episode, output, 'Authory', True)
 
