@@ -1,6 +1,7 @@
 import yaml
 import os
 import argparse
+import datetime
 
 def CreatePage(input, output):
     # Get the episode data
@@ -12,11 +13,11 @@ def CreatePage(input, output):
     episodeDict = {
         'title': dataDict['title'],
         'id': dataDict['id'],
-        'date': dataDict['published'],
-        'summary': dataDict['summary'],
-        'featured_image': dataDict['featured_image'],
-
-        'draft': 'false',
+        'publishDate': datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date(),
+        'excerpt': dataDict['excerpt'],
+        'youtubeid': dataDict['youtubeid'],
+        'image': dataDict['image'],
+        'draft': False,        
     }
 
     # Write the file
@@ -27,7 +28,7 @@ def CreatePage(input, output):
         yaml.dump(episodeDict, file)
         file.write('---\n')
         # file.write("{{< show " + dataDict['id'] + " >}}\n")
-        file.write("{{< episode >}}\n")
+        file.write(dataDict['shownotes'])
         file.close()
 
 def CreatePages(input, output):
