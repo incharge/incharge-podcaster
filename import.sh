@@ -39,12 +39,12 @@ then
     rm $DATAPATH/*.yaml
 fi
 
-#if $RECREATE
-#then
+if $RECREATE
+then
     YOUTUBE_PARAM='--youtubeapi=UUTUcatGD6xu4tAcxG-1D4Bg'
-#else
-#    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
-#fi
+else
+    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
+fi
 python $SCRIPT_DIR/import.py \
     $YOUTUBE_PARAM \
     --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
