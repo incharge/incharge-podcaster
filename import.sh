@@ -19,6 +19,9 @@ git config --global user.email "noreply@users.noreply.github.com"
 git config --global user.name "import-workflow"
 git config --global init.defaultBranch main
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+cd "$SCRIPT_DIR/.."
+
 # Don't accidentally commit staged files
 git diff --staged --quiet
 if [ $? -ne 0 ]
@@ -27,10 +30,9 @@ then
     exit
 fi
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-
 # Import podcast episodes from rss feeds to yaml files
-DATAPATH=$SCRIPT_DIR/../data/episode
+DATAPATH=$SCRIPT_DIR/../data/post
+mkdir -p $DATAPATH
 if $RECREATE && ls $DATAPATH/*.yaml >/dev/null 2>&1
 then
     echo "Removing existing .yaml files from $DATAPATH"
@@ -54,7 +56,8 @@ then
 fi
 
 # Process yaml files into md files
-SITEPATH=$SCRIPT_DIR/../content/episodes
+SITEPATH=$SCRIPT_DIR/../astrowind/src/content/post
+mkdir -p $SITEPATH
 if $RECREATE && ls SITEPATH/*.md >/dev/null 2>&1
 then 
     echo "Removing existing .md files from $SITEPATH"

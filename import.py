@@ -271,10 +271,10 @@ def ExtractYoutube(root, output):
             episode['shownotes'] = TrimShownotes(mediaGroup.find(mediaNamespace + 'description').text)
 
             episode['filename'] = NormaliseFilename(title)
-            episode['summary'] = MakeSummary(episode['shownotes'])
+            episode['excerpt'] = MakeSummary(episode['shownotes'])
 
             episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
-            episode['featured_image'] = mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url']
+            episode['image'] = mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url']
 
             UpdateEpisodeDatafile(episode, output, 'YouTube', True)
 
@@ -359,10 +359,10 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['shownotes'] = TrimShownotes(playlist_item['snippet']['description'])
 
                 episode['filename'] = NormaliseFilename(title)
-                episode['summary'] = MakeSummary(episode['shownotes'])
+                episode['excerpt'] = MakeSummary(episode['shownotes'])
 
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
-                episode['featured_image'] = playlist_item['snippet']['thumbnails']['high']['url']
+                episode['image'] = playlist_item['snippet']['thumbnails']['high']['url']
 
                 UpdateEpisodeDatafile(episode, output, 'Authory', True)
 
@@ -406,7 +406,7 @@ args = parser.parse_args()
 if args.youtubeapi is not None:
     if not 'GOOGLE_API_KEY' in os.environ:
         print("ERROR: Define environment variable: GOOGLE_API_KEY")
-        sys.exit()
+        sys.exit(1)
     ExtractYoutubeApi(args.youtubeapi, os.environ['GOOGLE_API_KEY'], args.output)
 
 # if args.authory is not None:
