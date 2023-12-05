@@ -8,11 +8,11 @@
 # .github/workflows/import.yaml calls ./.github/workflows/hugo.yaml if IMPORT_RESULT=PUSHED
 export IMPORT_RESULT=UNDEFINED
 # Recreate all files from scratch.  All existing episode .yaml an .md files are deleted before recreating
-RECREATE=False
-#RECREATE=True
+RECREATE=false
+#RECREATE=true
 # Commit and push changes?
-#DEPLOY=False
-DEPLOY=True
+#DEPLOY=false
+DEPLOY=true
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
