@@ -103,10 +103,14 @@ def MakeEpisodeId(episodeNo):
     return 'e' + str(episodeNo)
 
 # Replace youtube's randomly allocated load-balancing subdomains with the master
-# to avoid the field's values changing and being updated
-# e.g. https://i2.ytimg.com/ with https://i.ytimg.com/
+# to avoid the field's values changing and being updated.
+# Replace rss feed's hqdefault.jpg with maxresdefault.jpg
+# e.g.
+# https://i9.ytimg.com/vi/dzbIkj9tkKg/hqdefault.jpg
+# ...with...
+# https://i.ytimg.com/vi/dzbIkj9tkKg/maxresdefault.jpg
 def NormaliseImageUrl(url):
-    return re.sub(r'^(https://i)[0-9]+(.ytimg.com/)', r'\1\2', url)
+    return re.sub(r'^(https://i)[0-9]+(.ytimg.com/vi/[a-zA-Z0-9]+)/hqdefault\.jpg$', r'\1\2/maxresdefault.jpg', url)
 
 # Create an ID that uniquely identifies this episode across rss feeds from multiple platforms
 # Note: Hugo doesn't allow purly numeric data file names
