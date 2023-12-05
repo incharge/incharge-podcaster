@@ -31,7 +31,7 @@ then
 fi
 
 # Import podcast episodes from rss feeds to yaml files
-DATAPATH=$SCRIPT_DIR/../data/post
+DATAPATH=$SCRIPT_DIR/../yaml
 mkdir -p $DATAPATH
 if $RECREATE && ls $DATAPATH/*.yaml >/dev/null 2>&1
 then
@@ -39,12 +39,12 @@ then
     rm $DATAPATH/*.yaml
 fi
 
-if $RECREATE
-then
+#if $RECREATE
+#then
     YOUTUBE_PARAM='--youtubeapi=UUTUcatGD6xu4tAcxG-1D4Bg'
-else
-    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
-fi
+#else
+#    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
+#fi
 python $SCRIPT_DIR/import.py \
     $YOUTUBE_PARAM \
     --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
@@ -56,7 +56,7 @@ then
 fi
 
 # Process yaml files into md files
-SITEPATH=$SCRIPT_DIR/../astrowind/src/content/post
+SITEPATH=$SCRIPT_DIR/../md
 mkdir -p $SITEPATH
 if $RECREATE && ls SITEPATH/*.md >/dev/null 2>&1
 then 
