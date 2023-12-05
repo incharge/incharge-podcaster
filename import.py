@@ -93,8 +93,8 @@ def GetEpisodeNo(title):
         return 483
     if title.startswith('731 '):
         return 731
-    if title.startswith('734 '):
-        return 734
+    if title.startswith('744 '):
+        return 744
         
     match = re.search(r'^#([0-9]+)', title)
     return int(match.group(1)) if match else 0
