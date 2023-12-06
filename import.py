@@ -106,11 +106,13 @@ def MakeEpisodeId(episodeNo):
 # to avoid the field's values changing and being updated.
 # Replace rss feed's hqdefault.jpg with maxresdefault.jpg
 # e.g.
-# https://i9.ytimg.com/vi/dzbIkj9tkKg/hqdefault.jpg
+# https://i9.ytimg.com/vi/dzbIk_j9tkKg/hqdefault.jpg
 # ...with...
-# https://i.ytimg.com/vi/dzbIkj9tkKg/maxresdefault.jpg
+# https://i.ytimg.com/vi/dzbIk_j9tkKg/maxresdefault.jpg
 def NormaliseImageUrl(url):
-    return re.sub(r'^(https://i)[0-9]+(.ytimg.com/vi/[a-zA-Z0-9]+)/hqdefault\.jpg$', r'\1\2/maxresdefault.jpg', url)
+    url = re.sub(r'^(https://i)[0-9]+(\.ytimg\.com/)', r'\1\2', url)
+    url = re.sub(r'^(https://i.ytimg.com/vi/[^/]+)/hqdefault\.jpg$', r'\1/maxresdefault.jpg', url)
+    return url
 
 # Create an ID that uniquely identifies this episode across rss feeds from multiple platforms
 # Note: Hugo doesn't allow purly numeric data file names
@@ -372,7 +374,7 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['excerpt'] = MakeSummary(episode['shownotes'])
 
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
-                episode['image'] = NormaliseImageUrl(playlist_item['snippet']['thumbnails']['high']['url'])
+                episode['image'] = NormaliseImageUrl(playlist_item['snippet']['thumbnails']['maxres']['url'])
 
                 UpdateEpisodeDatafile(episode, output, 'Authory', True)
 
@@ -404,6 +406,12 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
 #         print('entry=(', item.tag, '), text=(', item.text, ')')
 #         for subitem in root:
 #             print('tag=(', subitem.tag, '), text=(', subitem.text, ')')
+
+# Test NormaliseImageUrl
+# print(NormaliseImageUrl("https://nochange/hqdefault.jpg"))
+# print(NormaliseImageUrl("https://i.ytimg.com/vi/dzbIk_j9tkKg/hqdefault.jpg"))
+# print(NormaliseImageUrl("https://i9.ytimg.com/vi/dzbIk_j9tkKg/maxresdefault.jpg"))
+# sys.exit()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--spotify')
