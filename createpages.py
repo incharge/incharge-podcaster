@@ -2,6 +2,10 @@ import yaml
 import os
 import argparse
 import datetime
+import sys
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 def CreatePage(input, output):
     # Get the episode data
@@ -27,9 +31,27 @@ def CreatePage(input, output):
         file.write('---\n')
         yaml.dump(episodeDict, file)
         file.write('---\n')
+
         # file.write("{{< show " + dataDict['id'] + " >}}\n")
-        file.write(dataDict['shownotes'])
-        file.close()
+        if (not 'transcript' in dataDict):
+            file.write(dataDict['shownotes'])
+        else:
+            file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
+            file.write('## Show notes\n')
+            file.write(dataDict['shownotes'])
+            file.write('\n')
+            file.write('[Back to top](#top)\n')
+            file.write('<a name="transcript"></a>\n')
+            file.write('## Transcript\n')
+            try:
+                with open(dataDict['transcript'], 'r', encoding='utf-8') as transcript:
+                    for line in transcript:                
+                        file.write(line)
+            except IOError as e:
+                eprint("I/O error({0}): {1}".format(e.errno, e.strerror))
+            except: #handle other exceptions such as attribute errors
+                eprint("Unexpected error:", sys.exc_info()[0])
+            file.write('[Back to top](#top)\n')
 
 def CreatePages(input, output):
     with os.scandir(input) as episodes:
