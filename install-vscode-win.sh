@@ -11,7 +11,8 @@ cd "$SCRIPT_DIR/.."
 
 [ -f installers/VSCode-win32-x64.zip ] || {
 	echo Downloading the latest vscode zip for Windows
-	curl.exe --fail --location --output "boot/VSCode-win32-x64.zip" --url "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-archive"
+	mkdir -p installers
+	curl.exe --fail --location --output "installers/VSCode-win32-x64.zip" --url "https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-archive"
 }
 
 echo Unzipping vscode
