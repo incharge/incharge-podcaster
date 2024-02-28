@@ -20,6 +20,32 @@ def DownloadRss(url, path):
 # PyYaml
 # https://pyyaml.org/wiki/PyYAMLDocumentation
 
+# Return a list of speaker names, extracted from the title
+def getSpeakers(title):
+	# Remove the episode ID from the start of the title
+	title = re.sub(r'^#[0-9]+ ', '', title)
+
+	# Get up to the first space-hyphen-space, if it comes before a colon.
+	# The spaces around the hyphen avoid matching hyphens in names.
+	# Note: the ? makes the + lazy instead of the usual greedy,
+	# because we want it to match as little as possible so we get the first occurrence of space-hyphen-space
+	result, count = re.subn(r'^([^:]+?) - .*$',
+			r'\1',
+			title)
+
+	if count == 0:
+		# Get up to the first colon
+		result, count = re.subn(r'^([^:]+):.*$',
+				r'\1',
+				title)
+
+	# TODO: if count == 0: warn no delimiter was found to separate speakers from the title
+
+	speakers = re.split(r' *[,&] *', result)
+	#for speaker in speakers: speaker = speaker.split()[0]
+
+	return speakers
+
 def TrimShownotes(shownotes):
     # Remove 'Support the channel'
     # 426+
@@ -287,6 +313,12 @@ def ExtractYoutube(root, output):
 
             episode['youtubeid'] = item.find(youtubeNamespace + 'videoId').text
             episode['image'] = NormaliseImageUrl(mediaGroup.find(mediaNamespace + 'thumbnail').attrib['url'])
+
+            episode['interviewee'] = getSpeakers(title)
+            #intervieweeFirst = []
+            #for interviewee in intervieweeFull:
+            #    intervieweeFirst.append(interviewee.split()[0])
+            #episode['interviewee-first'] = intervieweeFirst
 
             UpdateEpisodeDatafile(episode, output, 'YouTube', True)
 
