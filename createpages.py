@@ -3,11 +3,13 @@ import os
 import argparse
 import datetime
 import sys
+import json
+from transcripttotext import transcriptToText
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def CreatePage(input, output):
+def CreatePage(input, output, config):
     # Get the episode data
     with open(input, 'r', encoding='utf-8') as file:
         dataDict = yaml.safe_load(file)
@@ -32,8 +34,8 @@ def CreatePage(input, output):
         yaml.dump(episodeDict, file)
         file.write('---\n')
 
-        # file.write("{{< show " + dataDict['id'] + " >}}\n")
-        if (not 'transcript' in dataDict):
+        transcriptPath = os.path.join('episode', dataDict['id'], 'transcript.json')
+        if (not os.path.exists(transcriptPath) ):
             file.write(dataDict['shownotes'])
         else:
             file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
@@ -43,25 +45,25 @@ def CreatePage(input, output):
             file.write('[Back to top](#top)\n')
             file.write('<a name="transcript"></a>\n')
             file.write('## Transcript\n')
-            try:
-                with open(dataDict['transcript'], 'r', encoding='utf-8') as transcript:
-                    for line in transcript:                
-                        file.write(line)
-            except IOError as e:
-                eprint("I/O error({0}): {1}".format(e.errno, e.strerror))
-            except: #handle other exceptions such as attribute errors
-                eprint("Unexpected error:", sys.exc_info()[0])
+            transcriptToText(transcriptPath, dataDict, config, file)
             file.write('[Back to top](#top)\n')
 
-def CreatePages(input, output):
+def CreatePages(input, output, config):
     with os.scandir(input) as episodes:
         for episode in episodes:
-            if episode.name.endswith('.yaml') and episode.is_file():
-                CreatePage(episode.path, output)
+            path = os.path.join(input, episode.name, 'episode.yaml')
+            # os.episode.name.endswith('.yaml')
+            if os.path.exists(path):
+                CreatePage(path, output, config)
 
-parser = argparse.ArgumentParser()
-parser.add_argument('-i', '--input')
-parser.add_argument('-o', '--output')
-args = parser.parse_args()
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input')
+    parser.add_argument('-o', '--output')
+    args = parser.parse_args()
 
-CreatePages(args.input, args.output)
+    configfile = open('incharge-podcaster.json', mode='r', encoding='utf-8')
+    config = json.load(configfile)
+    configfile.close
+
+    CreatePages(args.input, args.output, config)

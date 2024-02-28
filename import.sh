@@ -18,20 +18,23 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
 
 # Don't accidentally commit staged files
-git diff --staged --quiet
-if [ $? -ne 0 ]
+if $DEPLOY
 then
-    echo "ERROR: There are staged files"
-    exit
+    git diff --staged --quiet
+    if [ $? -ne 0 ]
+    then
+        echo "ERROR: There are staged files"
+        exit
+    fi
 fi
 
 # Import podcast episodes from rss feeds to yaml files
-DATAPATH=$SCRIPT_DIR/../yaml
+DATAPATH=$SCRIPT_DIR/../episode
 mkdir -p $DATAPATH
-if $RECREATE && ls $DATAPATH/*.yaml >/dev/null 2>&1
+if $RECREATE
 then
-    echo "Removing existing .yaml files from $DATAPATH"
-    rm $DATAPATH/*.yaml
+    echo "Removing existing episodes from $DATAPATH"
+    rm -rf $DATAPATH/
 fi
 
 if $RECREATE

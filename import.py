@@ -6,6 +6,8 @@ import re
 import yaml
 import os
 import urllib.request
+import boto3
+import json
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -126,7 +128,7 @@ def GetEpisodeNo(title):
     return int(match.group(1)) if match else 0
 
 def MakeEpisodeId(episodeNo):
-    return 'e' + str(episodeNo)
+    return str(episodeNo)
 
 # Replace youtube's randomly allocated load-balancing subdomains with the master
 # to avoid the field's values changing and being updated.
@@ -158,12 +160,13 @@ def NormaliseImageUrl(url):
 
 #     return id
 
-# episode is a dictionary containing values to to stored in the data file
+# episode is a dictionary containing values to be stored in the data file
 # The dictionary must include id
-def UpdateEpisodeDatafile(episode, output, source, isMaster = False):
+def UpdateEpisodeDatafile(episode, isMaster = False):
 
     # Get the existing episode data
-    dataPath = os.path.join(output, episode['id'] + '.yaml')
+    dataDir = os.path.join('episode', episode['id'])
+    dataPath = os.path.join(dataDir, 'episode.yaml')
     if os.path.isfile(dataPath) :
         with open(dataPath, 'r', encoding='utf-8') as file:
             dataDict = yaml.safe_load(file)
@@ -175,8 +178,9 @@ def UpdateEpisodeDatafile(episode, output, source, isMaster = False):
         if isMaster:
             dataDict = {}
             msg = 'Creating '
+            os.makedirs(dataDir)
         else:
-            print("WARNING: Missing " + episode['id'] + '.yaml')
+            print("WARNING: Missing " + dataPath)
             return
 
     if episode != dataDict:
@@ -282,7 +286,7 @@ def ExtractSpotify(root, output):
             # # print("guid ", item.find('guid').text)
             # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-            UpdateEpisodeDatafile(episode, output, 'Spotify', False)
+            UpdateEpisodeDatafile(episode, False)
 
 def ExtractYoutube(root, output):
     mediaNamespace = '{http://search.yahoo.com/mrss/}'
@@ -320,7 +324,7 @@ def ExtractYoutube(root, output):
             #    intervieweeFirst.append(interviewee.split()[0])
             #episode['interviewee-first'] = intervieweeFirst
 
-            UpdateEpisodeDatafile(episode, output, 'YouTube', True)
+            UpdateEpisodeDatafile(episode, True)
 
         # print('id=(', item.find('id').text, ')')
         # print('link=(', item.find('link').attrib['href'], ')')
@@ -408,7 +412,7 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
                 episode['image'] = NormaliseImageUrl(playlist_item['snippet']['thumbnails']['maxres']['url'])
 
-                UpdateEpisodeDatafile(episode, output, 'Authory', True)
+                UpdateEpisodeDatafile(episode, True)
 
         # if episodeNo < 850:
         #     return
@@ -417,6 +421,27 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
         # Set up the query for the next page
         playlistitems_list_request = youtube.playlistItems().list_next(
             playlistitems_list_request, playlistitems_list_response)
+
+
+def getEpisodeID(filename):
+    filename = os.path.basename(filename)
+    return re.sub("\.[^.]*", "", filename)
+
+# Download transcript files from S3
+def DownloadTranscript(config):
+    client = boto3.client('s3')
+    response = client.list_objects_v2(Bucket=config['transcript-bucket'])
+
+    for o in response['Contents']:
+        filename = o["Key"]
+        episodeID = getEpisodeID(filename)
+        if filename.endswith(".json") and episodeID is not None:
+            filepath = os.path.join('episode', episodeID)
+            if not os.path.isdir(filepath):
+                os.makedirs(filepath)
+            filepath = os.path.join(filepath, 'transcript.json')
+            print('Getting transcript for episode ' + episodeID + ' from ' + filename + ' to ' + filepath)
+            client.download_file(config['transcript-bucket'], filename, filepath)
 
 # def DumpYoutube0(root):
 #     for entry in root:
@@ -444,6 +469,10 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
 # print(NormaliseImageUrl("https://i.ytimg.com/vi/dzbIk_j9tkKg/hqdefault.jpg"))
 # print(NormaliseImageUrl("https://i9.ytimg.com/vi/dzbIk_j9tkKg/maxresdefault.jpg"))
 # sys.exit()
+
+configfile = open('incharge-podcaster.json', mode='r', encoding='utf-8')
+config = json.load(configfile)
+configfile.close
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-s', '--spotify')
@@ -476,6 +505,8 @@ if args.spotify is not None:
     tree = et.parse('spotify.xml')
     root = tree.getroot()
     ExtractSpotify(root, args.output)
+
+DownloadTranscript(config)
 
 # DumpYoutube0(root)
 
