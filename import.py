@@ -412,6 +412,8 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
                 episode['youtubeid'] = playlist_item['snippet']['resourceId']['videoId']
                 episode['image'] = NormaliseImageUrl(playlist_item['snippet']['thumbnails']['maxres']['url'])
 
+                episode['interviewee'] = getSpeakers(title)
+
                 UpdateEpisodeDatafile(episode, True)
 
         # if episodeNo < 850:
