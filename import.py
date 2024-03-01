@@ -1,7 +1,7 @@
 import argparse
 import sys
 import xml.etree.ElementTree as et # See https://docs.python.org/3/library/xml.etree.elementtree.html
-import datetime
+from datetime import datetime, timezone
 import re
 import yaml
 import os
@@ -279,7 +279,7 @@ def NormaliseDateFormat(strDate):
     # Remove time from the end
     strDate = re.sub(' *[0-9][0-9]:[0-9][0-9]:[0-9][0-9]$', '', strDate)
 
-    dateDate = datetime.datetime.strptime(strDate, dmyDateFormat)
+    dateDate = datetime.strptime(strDate, dmyDateFormat)
     return dateDate.strftime(normalisedDateFormat)
 
 def S3EpisodeExists(episodeID, bucket, client):
@@ -287,8 +287,8 @@ def S3EpisodeExists(episodeID, bucket, client):
     for o in response['Contents']:
         if getEpisodeID(o["Key"]) == episodeID:
             #remoteModified = o["LastModified"]
-            return True
-    return False
+            return o["Key"]
+    return None
 
 # 	if local transcript file doesn't exist
 # 		if remote transcript file doesn't exist
@@ -508,10 +508,36 @@ def DownloadTranscript(config):
     for o in response['Contents']:
         filename = o["Key"]
         episodeID = getEpisodeID(filename)
+        action = 0
         if filename.endswith(".json") and episodeID is not None:
             filepath = GetTranscriptPath(episodeID, True)
-            print('Getting transcript for episode ' + episodeID + ' from ' + filename + ' to ' + filepath)
-            client.HttpDownload(config['transcript-bucket'], filename, filepath)
+            if os.path.isfile(filepath):
+                # Get modified for both
+                remoteModified = o["LastModified"]
+                localModified = os.path.getmtime(filepath)
+                localModified = datetime.fromtimestamp(localModified, timezone.utc)
+                if remoteModified > localModified:
+                    # This transcript is newer, it's been regenerated, so download it and overwrite the local version
+                    action = 2
+                else:
+                    # This transcript has already been imported on a previous import, so delete it
+                    action = -1
+            else:
+                # This transcript is new
+                action = 1
+
+            if action > 0:
+                # Download the transcript
+                print('Getting transcript for episode ' + episodeID + ' from ' + filename + ' to ' + filepath)
+                client.download_file(config['transcript-bucket'], filename, filepath)
+            elif action < 0:
+                # Delete the remote transcript
+                print('Deleting previously imported transcript for episode ' + episodeID + ' ' + filename)
+                client.delete_object(Bucket=config['transcript-bucket'], Key=filename)
+                # Delete the remote audio, if it exists
+                filename = S3EpisodeExists(episodeID, config['audio-bucket'], client)
+                if filename:
+                    client.delete_object(Bucket=config['audio-bucket'], Key=filename)
 
 # def DumpYoutube0(root):
 #     for entry in root:
