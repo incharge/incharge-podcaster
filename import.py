@@ -183,8 +183,8 @@ def UpdateEpisodeDatafile(episode, isMaster = False):
             file.close()
         # Merge so episode overwrites dataDict
         episode = dataDict | episode
-        episodeCanged = episode != dataDict
-        if episodeCanged:
+        episodeChanged = episode != dataDict
+        if episodeChanged:
             msg = 'Updating'
         else:
             msg = 'No changes to'
@@ -197,14 +197,14 @@ def UpdateEpisodeDatafile(episode, isMaster = False):
             msg = 'Missing'
 
     print(msg + ' '  + dataPath)
-    if (episodeExists and episodeCanged) or (not episodeExists and isMaster):
+    if (episodeExists and episodeChanged) or (not episodeExists and isMaster):
         # Data has changed, so update the data file
         #DumpEpisode(episode, msg, source)
         with open(dataPath, 'w', encoding='utf-8') as file:
             yaml.dump(episode, file)
             file.close()
 
-    return not episodeExists or episodeCanged
+    return not episodeExists or episodeChanged
 
 # def LoadEpisodeDatafile():
 #     with open('C:\\Users\\Julian\\Documents\\hugo\\site\\test01\\data\\episode\\e848.yaml', 'r') as file:
