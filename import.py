@@ -5,16 +5,28 @@ import datetime
 import re
 import yaml
 import os
-import urllib.request
+import urllib3
 import boto3
 import json
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-def DownloadRss(url, path):
-    print('Downloading ' + url)
-    urllib.request.urlretrieve(url, path)
+def HttpDownload(url, path):
+    print('Downloading ' + url + ' to ' + path)
+    chunk_size = 1024 * 1024
+
+    http = urllib3.PoolManager()
+    r = http.request('GET', url, preload_content=False)
+
+    with open(path, 'wb') as out:
+        while True:
+            data = r.read(chunk_size)
+            if not data:
+                break
+            out.write(data)
+
+    r.release_conn()
 
 # See regex docs
 # https://docs.python.org/3/library/re.html#re.Match.group
@@ -177,7 +189,7 @@ def UpdateEpisodeDatafile(episode, isMaster = False):
     dataDir = os.path.join('episode', episode['id'])
     dataPath = os.path.join(dataDir, 'episode.yaml')
     episodeExists = os.path.isfile(dataPath)
-    if os.path.isfile(dataPath) :
+    if episodeExists:
         with open(dataPath, 'r', encoding='utf-8') as file:
             dataDict = yaml.safe_load(file)
             file.close()
@@ -270,7 +282,35 @@ def NormaliseDateFormat(strDate):
     dateDate = datetime.datetime.strptime(strDate, dmyDateFormat)
     return dateDate.strftime(normalisedDateFormat)
 
-def ExtractSpotify(root, output):
+def S3EpisodeExists(episodeID, bucket, client):
+    response = client.list_objects_v2(Bucket=bucket)
+    for o in response['Contents']:
+        if getEpisodeID(o["Key"]) == episodeID:
+            #remoteModified = o["LastModified"]
+            return True
+    return False
+
+# 	if local transcript file doesn't exist
+# 		if remote transcript file doesn't exist
+# 			if remote audio file doesn't exist
+# 				upload to S3
+# 	else - maybe data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
+def InitiateTranscription(episodeID, config, audioUrl):
+    # Is there already a local transcript file for this episode?
+    if not os.path.isfile( GetTranscriptPath(episodeID) ):
+        # Is there already a remote transcript file for this episode?
+        client = boto3.client('s3')
+        if not S3EpisodeExists(episodeID, config['transcript-bucket'], client):
+            # Is there already a remote audio file for this episode?
+            if not S3EpisodeExists(episodeID, config['audio-bucket'], client):
+                filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
+                if count == 0: filename = '.mp3'
+                filename = str(episodeID) + filename
+                HttpDownload(audioUrl, filename)
+                client.upload_file(filename, config['audio-bucket'], filename)
+    # else - maybe episode data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
+
+def ExtractSpotify(root, output, config):
     print("Extracting episodes from Spotify feed")
     channel = root.find('channel')
     itunesNamespace = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
@@ -298,7 +338,12 @@ def ExtractSpotify(root, output):
             # # print("guid ", item.find('guid').text)
             # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-            if not UpdateEpisodeDatafile(episode, False):
+            if UpdateEpisodeDatafile(episode, False):
+                if int(episode['id']) > 900:
+                    InitiateTranscription(episode['id'], config, episode['spotifyAudioUrl'])
+                else:
+                    print("WARNING: Re-importing episode from spotify: " + episode['id'])
+            else:
                 print('Done importing from Spotify')
                 break
 
@@ -443,10 +488,17 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
         playlistitems_list_request = youtube.playlistItems().list_next(
             playlistitems_list_request, playlistitems_list_response)
 
-
+# Get the episode ID from an audi or transcript file on S3
+# i.e. remove the filename extension from 000.json or 000.m4a
 def getEpisodeID(filename):
     filename = os.path.basename(filename)
     return re.sub("\.[^.]*", "", filename)
+
+def GetTranscriptPath(episodeID, create = False):
+    filepath = os.path.join('episode', str(episodeID))
+    if create and not os.path.isdir(filepath):
+        os.makedirs(filepath)
+    return os.path.join(filepath, 'transcript.json')
 
 # Download transcript files from S3
 def DownloadTranscript(config):
@@ -457,12 +509,9 @@ def DownloadTranscript(config):
         filename = o["Key"]
         episodeID = getEpisodeID(filename)
         if filename.endswith(".json") and episodeID is not None:
-            filepath = os.path.join('episode', episodeID)
-            if not os.path.isdir(filepath):
-                os.makedirs(filepath)
-            filepath = os.path.join(filepath, 'transcript.json')
+            filepath = GetTranscriptPath(episodeID, True)
             print('Getting transcript for episode ' + episodeID + ' from ' + filename + ' to ' + filepath)
-            client.download_file(config['transcript-bucket'], filename, filepath)
+            client.HttpDownload(config['transcript-bucket'], filename, filepath)
 
 # def DumpYoutube0(root):
 #     for entry in root:
@@ -510,22 +559,22 @@ if args.youtubeapi is not None:
     ExtractYoutubeApi(args.youtubeapi, os.environ['GOOGLE_API_KEY'], args.output)
 
 # if args.authory is not None:
-#     #DownloadRss(args.authory, 'authory.xml')
+#     #HttpDownload(args.authory, 'authory.xml')
 #     tree = et.parse('authory.xml')
 #     root = tree.getroot()
 #     ExtractAuthory(root, args.output)
 
 if args.youtuberss is not None:
-    DownloadRss(args.youtuberss, 'youtuberss.xml')
+    HttpDownload(args.youtuberss, 'youtuberss.xml')
     tree = et.parse('youtuberss.xml')
     root = tree.getroot()
     ExtractYoutube(root, args.output)
 
 if args.spotify is not None:
-    DownloadRss(args.spotify, 'spotify.xml')
+    HttpDownload(args.spotify, 'spotify.xml')
     tree = et.parse('spotify.xml')
     root = tree.getroot()
-    ExtractSpotify(root, args.output)
+    ExtractSpotify(root, args.output, config)
 
 DownloadTranscript(config)
 
