@@ -26,35 +26,69 @@ def CreatePage(input, output, config):
         'draft': False,        
     }
 
-    # Write the file
+    # Does the page need to be created or updated?
     pagesPath = os.path.join(output, dataDict['filename'] + '.md')
-    print('Writing ' + pagesPath)
-    with open(pagesPath, 'w', encoding='utf-8') as file:
-        file.write('---\n')
-        yaml.dump(episodeDict, file)
-        file.write('---\n')
-
-        transcriptPath = os.path.join('episode', dataDict['id'], 'transcript.json')
-        if (not os.path.exists(transcriptPath) ):
-            file.write(dataDict['shownotes'])
+    pageExists = os.path.exists(pagesPath)
+    if pageExists:
+        dataModified = os.path.getmtime(input)
+        pageModified = os.path.getmtime(pagesPath)
+        if dataModified > pageModified:
+            writePage = 1
         else:
-            file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
-            file.write('## Show notes\n')
-            file.write(dataDict['shownotes'])
-            file.write('\n')
-            file.write('[Back to top](#top)\n')
-            file.write('<a name="transcript"></a>\n')
-            file.write('## Transcript\n')
-            transcriptToText(transcriptPath, dataDict, config, file)
-            file.write('[Back to top](#top)\n')
+            writePage = 0
+    else:
+        writePage = -1
+
+    if writePage:
+        print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagesPath)
+        with open(pagesPath, 'w', encoding='utf-8') as file:
+            file.write('---\n')
+            yaml.dump(episodeDict, file)
+            file.write('---\n')
+
+            transcriptPath = os.path.join('episode', dataDict['id'], 'transcript.json')
+            if (not os.path.exists(transcriptPath) ):
+                file.write(dataDict['shownotes'])
+            else:
+                file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
+                file.write('## Show notes\n')
+                file.write(dataDict['shownotes'])
+                file.write('\n')
+                file.write('[Back to top](#top)\n')
+                file.write('<a name="transcript"></a>\n')
+                file.write('## Transcript\n')
+                transcriptToText(transcriptPath, dataDict, config, file)
+                file.write('[Back to top](#top)\n')
+
+    return writePage
 
 def CreatePages(input, output, config):
+    createdCount = 0
+    updatedCount = 0
+
+    input = os.path.abspath(input)
+    output = os.path.abspath(output)
+
+    print('Generating pages from ' + input + ' to ' + output)
     with os.scandir(input) as episodes:
         for episode in episodes:
             path = os.path.join(input, episode.name, 'episode.yaml')
             # os.episode.name.endswith('.yaml')
             if os.path.exists(path):
-                CreatePage(path, output, config)
+                writePage = CreatePage(path, output, config)
+                if writePage < 0:
+                    createdCount += 1
+                elif writePage > 0:
+                    updatedCount += 1
+                # else: Unchanged
+            else:
+                print('WARNING: Missing episode file ' + path)
+    if createdCount > 0:
+        print(str(createdCount) + ' pages created' )
+    if updatedCount > 0:
+        print(str(createdCount) + ' pages updated' )
+    if createdCount == 0 and updatedCount == 0:
+        print('No pages needed to be created or updated' )
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
