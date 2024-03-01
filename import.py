@@ -162,37 +162,49 @@ def NormaliseImageUrl(url):
 
 # episode is a dictionary containing values to be stored in the data file
 # The dictionary must include id
+# If isMaster is true then new files are created, otherwise they are only updated
+# Returns True if it's a new episode, indicating that the import process should continue
 def UpdateEpisodeDatafile(episode, isMaster = False):
+    # Truth table showing how inputs determine outputs
+    #   -------- Inputs --------|------- Outputs ------
+    #   Exists  Changed Master  |   Write   New Episode
+    #   N       x       N       |   N       Y       
+    #   N       x       Y       |   Y       Y
+    #   Y       N       x       |   N       N
+    #   Y       Y       x       |   Y       Y
 
     # Get the existing episode data
     dataDir = os.path.join('episode', episode['id'])
     dataPath = os.path.join(dataDir, 'episode.yaml')
+    episodeExists = os.path.isfile(dataPath)
     if os.path.isfile(dataPath) :
         with open(dataPath, 'r', encoding='utf-8') as file:
             dataDict = yaml.safe_load(file)
             file.close()
         # Merge so episode overwrites dataDict
         episode = dataDict | episode
-        msg = 'Updating '
+        episodeCanged = episode != dataDict
+        if episodeCanged:
+            msg = 'Updating'
+        else:
+            msg = 'No changes to'
     else:
         if isMaster:
             dataDict = {}
-            msg = 'Creating '
+            msg = 'Creating'
             os.makedirs(dataDir)
         else:
-            print("WARNING: Missing " + dataPath)
-            return
+            msg = 'Missing'
 
-    if episode != dataDict:
+    print(msg + ' '  + dataPath)
+    if (episodeExists and episodeCanged) or (not episodeExists and isMaster):
         # Data has changed, so update the data file
         #DumpEpisode(episode, msg, source)
-        print(msg + dataPath)
         with open(dataPath, 'w', encoding='utf-8') as file:
             yaml.dump(episode, file)
             file.close()
-    #else:
-    #   Verbose?
-    #    print('No change to ' + dataPath)
+
+    return not episodeExists or episodeCanged
 
 # def LoadEpisodeDatafile():
 #     with open('C:\\Users\\Julian\\Documents\\hugo\\site\\test01\\data\\episode\\e848.yaml', 'r') as file:
@@ -286,7 +298,9 @@ def ExtractSpotify(root, output):
             # # print("guid ", item.find('guid').text)
             # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-            UpdateEpisodeDatafile(episode, False)
+            if not UpdateEpisodeDatafile(episode, False):
+                print('Done importing from Spotify')
+                break
 
 def ExtractYoutube(root, output):
     mediaNamespace = '{http://search.yahoo.com/mrss/}'
@@ -324,8 +338,9 @@ def ExtractYoutube(root, output):
             #    intervieweeFirst.append(interviewee.split()[0])
             #episode['interviewee-first'] = intervieweeFirst
 
-            UpdateEpisodeDatafile(episode, True)
-
+            if not UpdateEpisodeDatafile(episode, True):
+                print('Done importing from YouTube feed')
+                break
         # print('id=(', item.find('id').text, ')')
         # print('link=(', item.find('link').attrib['href'], ')')
         # print('updated=(', item.find('updated').text, ')')
@@ -388,7 +403,8 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
 
     print("Extracting episodes via YouTube API")
     #print( 'Videos in list %s' % uploads_playlist_id)
-    while playlistitems_list_request:
+    newepisodes = True
+    while newepisodes and playlistitems_list_request:
         # Fetch the next page
         playlistitems_list_response = playlistitems_list_request.execute()
 
@@ -414,7 +430,10 @@ def ExtractYoutubeApi(playlistId, apiKey, output):
 
                 episode['interviewee'] = getSpeakers(title)
 
-                UpdateEpisodeDatafile(episode, True)
+                newepisodes = UpdateEpisodeDatafile(episode, True)
+                if not newepisodes:
+                    print('Done importing from YouTube API')
+                    break
 
         # if episodeNo < 850:
         #     return
