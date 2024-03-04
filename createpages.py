@@ -9,9 +9,9 @@ from transcripttotext import transcriptToText
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
-def CreatePage(input, output, config):
+def GeneratePage(episodepath, config):
     # Get the episode data
-    with open(input, 'r', encoding='utf-8') as file:
+    with open(episodepath, 'r', encoding='utf-8') as file:
         dataDict = yaml.safe_load(file)
         file.close()
 
@@ -27,11 +27,10 @@ def CreatePage(input, output, config):
     }
 
     # Does the page need to be created or updated?
-    pagesPath = os.path.join(output, dataDict['filename'] + '.md')
-    pageExists = os.path.exists(pagesPath)
-    if pageExists:
-        dataModified = os.path.getmtime(input)
-        pageModified = os.path.getmtime(pagesPath)
+    pagepath = os.path.join(config['page-folder'], dataDict['filename'] + '.md')
+    if os.path.exists(pagepath):
+        dataModified = os.path.getmtime(episodepath)
+        pageModified = os.path.getmtime(pagepath)
         if dataModified > pageModified:
             writePage = 1
         else:
@@ -40,13 +39,13 @@ def CreatePage(input, output, config):
         writePage = -1
 
     if writePage:
-        print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagesPath)
-        with open(pagesPath, 'w', encoding='utf-8') as file:
+        print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
+        with open(pagepath, 'w', encoding='utf-8') as file:
             file.write('---\n')
             yaml.dump(episodeDict, file)
             file.write('---\n')
 
-            transcriptPath = os.path.join('episode', dataDict['id'], 'transcript.json')
+            transcriptPath = os.path.join(config['episode-folder'], dataDict['id'], 'transcript.json')
             if (not os.path.exists(transcriptPath) ):
                 file.write(dataDict['shownotes'])
             else:
@@ -62,27 +61,24 @@ def CreatePage(input, output, config):
 
     return writePage
 
-def CreatePages(input, output, config):
+def GeneratePages(config):
     createdCount = 0
     updatedCount = 0
 
-    input = os.path.abspath(input)
-    output = os.path.abspath(output)
-
-    print('Generating pages from ' + input + ' to ' + output)
-    with os.scandir(input) as episodes:
+    print(f"Generating pages from {config['episode-folder']} to {config['page-folder']}")
+    with os.scandir(config['episode-folder']) as episodes:
         for episode in episodes:
-            path = os.path.join(input, episode.name, 'episode.yaml')
+            episodepath = os.path.join(config['episode-folder'], episode.name, 'episode.yaml')
             # os.episode.name.endswith('.yaml')
-            if os.path.exists(path):
-                writePage = CreatePage(path, output, config)
+            if os.path.exists(episodepath):
+                writePage = GeneratePage(episodepath, config)
                 if writePage < 0:
                     createdCount += 1
                 elif writePage > 0:
                     updatedCount += 1
                 # else: Unchanged
             else:
-                print('WARNING: Missing episode file ' + path)
+                print(f"WARNING: Missing episode file {episodepath}")
     if createdCount > 0:
         print(str(createdCount) + ' pages created' )
     if updatedCount > 0:
@@ -92,8 +88,6 @@ def CreatePages(input, output, config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--input')
-    parser.add_argument('-o', '--output')
     parser.add_argument('-x', '--ignore')
     args = parser.parse_args()
 
@@ -101,4 +95,12 @@ if __name__ == '__main__':
     config = json.load(configfile)
     configfile.close
 
-    CreatePages(args.input, args.output, config)
+    # Assign defaults if no folder settings are provided and convert relative to absolute paths
+    config['episode-folder'] = os.path.abspath(
+        config['episode-folder'] if 'episode-folder' in config else 'episode'
+    )
+    config['page-folder'] = os.path.abspath(
+        config['page-folder'] if 'page-folder' in config else 'page'
+    )
+
+    GeneratePages(config)

@@ -58,9 +58,7 @@ then
     echo "Removing existing .md files from $SITEPATH"
     rm $SITEPATH/*.md
 fi
-python $SCRIPT_DIR/createpages.py \
-    --input "$DATAPATH" \
-    --output "$SITEPATH"
+python $SCRIPT_DIR/createpages.py
 
 if [ $? -ne 0 ]
 then

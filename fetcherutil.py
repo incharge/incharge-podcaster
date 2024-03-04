@@ -3,8 +3,8 @@ import re
 
 # Get the local path of the transcript for episodeID
 # Optionally create the folder if it doesn't already exist
-def GetTranscriptPath(episodeID, create = False):
-    filepath = os.path.join('episode', str(episodeID))
+def GetTranscriptPath(episodeID, config, create = False):
+    filepath = os.path.join(config['episode-folder'], str(episodeID))
     if create and not os.path.isdir(filepath):
         os.makedirs(filepath)
     return os.path.join(filepath, 'transcript.json')

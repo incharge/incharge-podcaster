@@ -75,6 +75,11 @@ def importer():
                 print(f"Error reading the configuration file ({type(error).__name__}): {error}")
                 return
 
+    # Assign default if no episode folder setting is provided and convert relative to absolute path
+    config['episode-folder'] = os.path.abspath(
+        config['episode-folder'] if 'episode-folder' in config else 'episode'
+    )
+
     # Process data sources defined in the config file
     for name, source in config["source"].items():
         fetchSource(name, source, config)

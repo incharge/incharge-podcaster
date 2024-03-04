@@ -19,7 +19,7 @@ class FetcherPlugin(Fetcher):
                 episodeID = fetcherutil.getEpisodeID(filename)
                 action = 0
                 if filename.endswith(".json") and episodeID is not None:
-                    filepath = fetcherutil.GetTranscriptPath(episodeID, True)
+                    filepath = fetcherutil.GetTranscriptPath(episodeID, self.config, True)
                     if os.path.isfile(filepath):
                         # Get modified for both
                         remoteModified = o["LastModified"]

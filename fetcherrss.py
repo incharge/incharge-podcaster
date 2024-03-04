@@ -17,7 +17,7 @@ class FetcherPlugin(Fetcher):
     # 	else - maybe data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
     def InitiateTranscription(self, episodeID, config, audioUrl):
         # Is there already a local transcript file for this episode?
-        if not os.path.isfile( fetcherutil.GetTranscriptPath(episodeID) ):
+        if not os.path.isfile( fetcherutil.GetTranscriptPath(episodeID, self.config) ):
             # Is there already a remote transcript file for this episode?
             client = boto3.client('s3')
             if not fetcherutil.S3EpisodeExists(episodeID, config['transcript-bucket'], client):
@@ -30,7 +30,7 @@ class FetcherPlugin(Fetcher):
                     client.upload_file(filename, config['audio-bucket'], filename)
         # else - maybe episode data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
 
-    def ExtractSpotify(self, root, output):
+    def ExtractSpotify(self, root):
         print("Extracting episodes from Spotify feed")
         channel = root.find('channel')
         itunesNamespace = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
@@ -75,6 +75,6 @@ class FetcherPlugin(Fetcher):
         self.HttpDownload(source['url'], 'spotify.xml')
         tree = et.parse('spotify.xml')
         root = tree.getroot()
-        self.ExtractSpotify(root, 'episode')
+        self.ExtractSpotify(root)
 
         return True

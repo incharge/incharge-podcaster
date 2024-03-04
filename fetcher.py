@@ -174,11 +174,11 @@ class Fetcher(ABC):
         #   Y       Y       x       |   Y       Y
 
         # Get the existing episode data
-        dataDir = os.path.join('episode', episode['id'])
-        dataPath = os.path.join(dataDir, 'episode.yaml')
-        episodeExists = os.path.isfile(dataPath)
+        episodefolder = os.path.join(self.config['episode-folder'], episode['id'])
+        episodepath = os.path.join(episodefolder, 'episode.yaml')
+        episodeExists = os.path.isfile(episodepath)
         if episodeExists:
-            with open(dataPath, 'r', encoding='utf-8') as file:
+            with open(episodepath, 'r', encoding='utf-8') as file:
                 dataDict = yaml.safe_load(file)
                 file.close()
             # Merge so episode overwrites dataDict
@@ -193,16 +193,16 @@ class Fetcher(ABC):
             if isMaster:
                 dataDict = {}
                 msg = 'Creating'
-                if not os.path.isdir(dataDir):
-                    os.makedirs(dataDir)
+                if not os.path.isdir(episodefolder):
+                    os.makedirs(episodefolder)
             else:
                 msg = 'Missing'
 
-        if msg: print(msg + ' '  + dataPath)
+        if msg: print(msg + ' '  + episodepath)
         if (episodeExists and episodeChanged) or (not episodeExists and isMaster):
             # Data has changed, so update the data file
             #DumpEpisode(episode, msg, source)
-            with open(dataPath, 'w', encoding='utf-8') as file:
+            with open(episodepath, 'w', encoding='utf-8') as file:
                 yaml.dump(episode, file)
                 file.close()
 
