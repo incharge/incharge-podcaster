@@ -5,6 +5,15 @@ import boto3
 import fetcherutil
 from fetcher import Fetcher
 
+# -------- S3 --------  -- Local -  Newer   Action
+# audio     transcript  transcript
+# N         N           N           x       0       Do nothing - import didn't upload audio for some reason
+# N         N           Y           x       0       Do nothing - Transcript has already been generated
+# x         Y           N           x       1       Download transcript
+# x         Y           Y           N       -1      Delete from S3
+# x         Y           Y           Y       2       Download transcript (overwrite)
+# Y         N           N           x       0       Do nothing - Waiting for transcript to be generated
+# Y         N           Y           x       0       Do nothing - Waiting for transcript to be re-generated?
 class FetcherPlugin(Fetcher):
     def __init__(self, config):
         Fetcher.__init__(self, config) 
@@ -47,3 +56,6 @@ class FetcherPlugin(Fetcher):
                         filename = fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client)
                         if filename:
                             client.delete_object(Bucket=self.config['audio-bucket'], Key=filename)
+                    # else zero action i.e. Do nothing
+                # else - not a transcript file, so ignore it
+        # else - There are no transcripts on S3
