@@ -20,9 +20,9 @@ class FetcherPlugin(Fetcher):
         if not os.path.isfile( fetcherutil.GetTranscriptPath(episodeID) ):
             # Is there already a remote transcript file for this episode?
             client = boto3.client('s3')
-            if not self.S3EpisodeExists(episodeID, config['transcript-bucket'], client):
+            if not fetcherutil.S3EpisodeExists(episodeID, config['transcript-bucket'], client):
                 # Is there already a remote audio file for this episode?
-                if not self.S3EpisodeExists(episodeID, config['audio-bucket'], client):
+                if not fetcherutil.S3EpisodeExists(episodeID, config['audio-bucket'], client):
                     filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
                     if count == 0: filename = '.mp3'
                     filename = str(episodeID) + filename

@@ -193,7 +193,8 @@ class Fetcher(ABC):
             if isMaster:
                 dataDict = {}
                 msg = 'Creating'
-                os.makedirs(dataDir)
+                if not os.path.isdir(dataDir):
+                    os.makedirs(dataDir)
             else:
                 msg = 'Missing'
 

@@ -94,6 +94,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', '--input')
     parser.add_argument('-o', '--output')
+    parser.add_argument('-x', '--ignore')
     args = parser.parse_args()
 
     configfile = open('incharge-podcaster.json', mode='r', encoding='utf-8')
