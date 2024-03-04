@@ -31,22 +31,19 @@ fi
 # Import podcast episodes from rss feeds to yaml files
 DATAPATH=$SCRIPT_DIR/../episode
 mkdir -p $DATAPATH
-if $RECREATE
-then
-    echo "Removing existing episodes from $DATAPATH"
-    rm -rf $DATAPATH/
-fi
+# if $RECREATE
+# then
+#     echo "Removing existing episodes from $DATAPATH"
+#     rm -rf $DATAPATH/
+# fi
 
 if $RECREATE
 then
-    YOUTUBE_PARAM='--youtubeapi=UUTUcatGD6xu4tAcxG-1D4Bg'
+    python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
 else
-    YOUTUBE_PARAM='--youtuberss=https://www.youtube.com/feeds/videos.xml?channel_id=UCTUcatGD6xu4tAcxG-1D4Bg'
+    python $SCRIPT_DIR/import.py
 fi
-python $SCRIPT_DIR/import.py \
-    $YOUTUBE_PARAM \
-    --spotify 'https://anchor.fm/s/822ba20/podcast/rss' \
-    --output "$DATAPATH"
+
 if [ $? -ne 0 ]
 then
     echo "ERROR: Failed to import episodes"
