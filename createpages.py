@@ -15,38 +15,44 @@ def GeneratePage(episodepath, config):
         dataDict = yaml.safe_load(file)
         file.close()
 
-    # Select the fields to be written to the FrontMatter section
-    episodeDict = {
-        'title': dataDict['title'],
-        'id': dataDict['id'],
-        'publishDate': datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date(),
-        'excerpt': dataDict['excerpt'],
-        'youtubeid': dataDict['youtubeid'],
-        'image': dataDict['image'],
-        'draft': False,        
-    }
-
     # Does the page need to be created or updated?
     pagepath = os.path.join(config['page-folder'], dataDict['filename'] + '.md')
+    transcriptPath = os.path.join(config['episode-folder'], dataDict['id'], 'transcript.json')
     if os.path.exists(pagepath):
-        dataModified = os.path.getmtime(episodepath)
+        # The page exists. Does it need to be updated?
         pageModified = os.path.getmtime(pagepath)
+        # If either the episode data or transcript data has changed?
+        dataModified = max(
+            os.path.getmtime(transcriptPath) if os.path.exists(transcriptPath) else 0,
+            os.path.getmtime(episodepath)
+        )
         if dataModified > pageModified:
-            writePage = 1
+            writePage = 1   # The episode data has changed, so the page needs to be updated
         else:
-            writePage = 0
+            writePage = 0   # The episode data has not changed
     else:
-        writePage = -1
+        writePage = -1      # The episode data is new, so the page needs to be created
 
     if writePage:
         print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
+
+        # Select the fields to be written to the FrontMatter section
+        episodeDict = {
+            'title': dataDict['title'],
+            'id': dataDict['id'],
+            'publishDate': datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date(),
+            'excerpt': dataDict['excerpt'],
+            'youtubeid': dataDict['youtubeid'],
+            'image': dataDict['image'],
+            'draft': False,        
+        }
+
         with open(pagepath, 'w', encoding='utf-8') as file:
             file.write('---\n')
             yaml.dump(episodeDict, file)
             file.write('---\n')
 
-            transcriptPath = os.path.join(config['episode-folder'], dataDict['id'], 'transcript.json')
-            if (not os.path.exists(transcriptPath) ):
+            if not os.path.exists(transcriptPath):
                 file.write(dataDict['shownotes'])
             else:
                 file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
@@ -82,7 +88,7 @@ def GeneratePages(config):
     if createdCount > 0:
         print(str(createdCount) + ' pages created' )
     if updatedCount > 0:
-        print(str(createdCount) + ' pages updated' )
+        print(str(updatedCount) + ' pages updated' )
     if createdCount == 0 and updatedCount == 0:
         print('No pages needed to be created or updated' )
 
