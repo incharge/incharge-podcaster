@@ -19,8 +19,9 @@ def getEpisodeID(filename):
 # The filename extension is ignored
 def S3EpisodeExists(episodeID, bucket, client):
     response = client.list_objects_v2(Bucket=bucket)
-    for o in response['Contents']:
-        if getEpisodeID(o["Key"]) == episodeID:
-            #remoteModified = o["LastModified"]
-            return o["Key"]
+    if response["KeyCount"] > 0:
+        for o in response['Contents']:
+            if getEpisodeID(o["Key"]) == episodeID:
+                #remoteModified = o["LastModified"]
+                return o["Key"]
     return None
