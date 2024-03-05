@@ -6,27 +6,33 @@ import codecs
 # Remove um at the start of a sentence, and capitalise the next word
 def remove_first_um(text, um):
     # Remove um from the beginning of the string
-    pattern = '^' + um + ' ([A-Za-z0-9])'
+    pattern = '^' + um + ',? ([A-Za-z0-9])'
     text = re.sub(
         re.compile(pattern,flags=re.IGNORECASE),
         lambda pat: pat.group(1).upper(),
         text)
 
     # Remove um from the beginning of sentences i.e. after sentence ending punctuation
-    pattern = '([.?!:]) ' + um + ' ([A-Za-z0-9])'
+    pattern = '([.?!:]) ' + um + ',? ([A-Za-z0-9])'
     text = re.sub(
         re.compile(pattern,flags=re.IGNORECASE),
         lambda pat: pat.group(1) + ' ' + pat.group(2).upper(),
         text)
 
+    # Replace comma-space-um-comma with comma
+    text = re.sub(', ' + um + ',', ',', text)
+
     return text
 
 # Remove all Ums
 def remove_all_um(text, um):
-    return re.sub(' ' + um + '(?= )',
+    # Replace space-um-space with space
+    text = re.sub(
+        re.compile(' ' + um + ',?(?= )'),
         '',
-        text,
-        flags=re.IGNORECASE)
+        text)
+
+    return text
 
 # Remove ums from the given text
 def DeUm(text, ums):
