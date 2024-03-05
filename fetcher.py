@@ -32,6 +32,7 @@ class Fetcher(ABC):
             r.release_conn()
         else:
             print('HTTP request status ' + str(r.status) + ' from url ' + url)
+        return success
 
     def HttpDownloadRss(self, url, rsspath):
         if re.match(r"^https?://", url):
