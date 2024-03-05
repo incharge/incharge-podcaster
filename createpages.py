@@ -94,12 +94,13 @@ def GeneratePages(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--configfile')
     parser.add_argument('-x', '--ignore')
     args = parser.parse_args()
 
-    configfile = open('incharge-podcaster.json', mode='r', encoding='utf-8')
-    config = json.load(configfile)
-    configfile.close
+    configpath = args.configfile if args.configfile else 'incharge-podcaster.json'
+    with open(configpath, mode='r', encoding='utf-8') as configfile:
+        config = json.load(configfile)
 
     # Assign defaults if no folder settings are provided and convert relative to absolute paths
     config['episode-folder'] = os.path.abspath(
@@ -108,5 +109,7 @@ if __name__ == '__main__':
     config['page-folder'] = os.path.abspath(
         config['page-folder'] if 'page-folder' in config else 'page'
     )
+    if not os.path.exists(config['page-folder']):
+        os.makedirs(config['page-folder'])
 
     GeneratePages(config)

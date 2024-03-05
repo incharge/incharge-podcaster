@@ -1,0 +1,18 @@
+{
+    "episode-folder": "incharge-podcaster/test/result/episode",
+    "page-folder": "incharge-podcaster/test/result/md",
+    "source": {
+        "Youtube via RSS": {
+            "type": "youtube-rss",
+            "url": "incharge-podcaster/test/rss/youtuberss.xml"
+        },
+        "Spotify": {
+            "type": "rss",
+            "url": "incharge-podcaster/test/rss/spotify.xml"
+        }
+    },
+    "ums": ["um", "uh", "mhm"],
+    "defaults": {
+        "interviewer": ["Interviewer"]
+    }
+}

@@ -14,6 +14,7 @@ class Fetcher(ABC):
     def fetch(self, source):
         pass
 
+    # Return True if the download succeeds
     def HttpDownload(self, url, path):
         chunk_size = 1024 * 1024
 
@@ -32,7 +33,16 @@ class Fetcher(ABC):
         else:
             print('HTTP request status ' + str(r.status) + ' from url ' + url)
 
-        return success
+    def HttpDownloadRss(self, url, rsspath):
+        if re.match(r"^https?://", url):
+            print("Download from RSS " + url)
+            if not self.HttpDownload(url, rsspath):
+                rsspath = None
+        else:
+            rsspath = url
+            print("Process local rss file " + rsspath)
+
+        return rsspath
 
     # See regex docs
     # https://docs.python.org/3/library/re.html#re.Match.group

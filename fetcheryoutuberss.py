@@ -8,9 +8,9 @@ class FetcherPlugin(Fetcher):
 
     def fetch(self, source):
         print("Download from Youtube RSS " + source['url'])
-
-        if self.HttpDownload(source['url'], 'youtuberss.xml'):
-            tree = et.parse('youtuberss.xml')
+        rsspath = self.HttpDownloadRss(source['url'], 'youtuberss.xml')
+        if rsspath:
+            tree = et.parse(rsspath)
             root = tree.getroot()
             mediaNamespace = '{http://search.yahoo.com/mrss/}'
             youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'

@@ -58,10 +58,13 @@ class FetcherPlugin(Fetcher):
                 # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
                 if self.UpdateEpisodeDatafile(episode, False):
-                    if int(episode['id']) > 900:
-                        self.InitiateTranscription(episode['id'], self.config, episode['spotifyAudioUrl'])
-                    else:
-                        print("WARNING: Re-importing episode from spotify: " + episode['id'])
+                    # Is transcription configured?
+                    if 'transcript-bucket' in self.config and 'audio-bucket' in self.config:
+                        # Is there already a remote audio file for this episode?
+                        if int(episode['id']) > 900:
+                            self.InitiateTranscription(episode['id'], self.config, episode['spotifyAudioUrl'])
+                        else:
+                            print("WARNING: Re-importing episode from spotify: " + episode['id'])
                 else:
                     print('Done importing from Spotify')
                     break
@@ -71,10 +74,10 @@ class FetcherPlugin(Fetcher):
             print(f"Source is missing required property 'url': {str(source)}")
             return False
 
-        print("Download from RSS " + source['url'])
-        self.HttpDownload(source['url'], 'spotify.xml')
-        tree = et.parse('spotify.xml')
-        root = tree.getroot()
-        self.ExtractSpotify(root)
+        rsspath = self.HttpDownloadRss(source['url'], 'spotify.xml')
+        if rsspath:
+            tree = et.parse(rsspath)
+            root = tree.getroot()
+            self.ExtractSpotify(root)
 
         return True
