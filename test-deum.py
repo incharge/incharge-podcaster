@@ -11,6 +11,8 @@ class TestDeUm(unittest.TestCase):
 
         self.assertEqual(DeUm('knowledge. Um, yeah, ', ['um']), 'knowledge. Yeah, ')
         self.assertEqual(DeUm('Um, that, that\'s a good question', ['um']), 'That, that\'s a good question')
+        self.assertEqual(DeUm('Um, that, that\'s a good question', ['um']), 'That, that\'s a good question')
+        self.assertEqual(DeUm('So yeah, Um so, one of the', ['um']), 'So yeah, so, one of the')
 
         self.assertEqual(DeUm('Um, and I think I\'m not sure, uh, we could ask legal um, practitioners', ['um', 'uh']), 'And I think I\'m not sure, we could ask legal practitioners')
 

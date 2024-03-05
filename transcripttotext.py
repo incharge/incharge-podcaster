@@ -28,7 +28,7 @@ def remove_first_um(text, um):
 def remove_all_um(text, um):
     # Replace space-um-space with space
     text = re.sub(
-        re.compile(' ' + um + ',?(?= )'),
+        re.compile(' ' + um + ',?(?= )', flags=re.IGNORECASE),
         '',
         text)
 
