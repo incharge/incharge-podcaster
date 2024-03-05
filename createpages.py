@@ -52,17 +52,23 @@ def GeneratePage(episodepath, config):
             yaml.dump(episodeDict, file)
             file.write('---\n')
 
+            # <div> tags require 2 line breaks, otherwise the next line's markup is not processed
             if not os.path.exists(transcriptPath):
+                file.write('<div class="timelinks">\n\n')
                 file.write(dataDict['shownotes'])
+                file.write('</div>\n\n')
             else:
                 file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
                 file.write('## Show notes\n')
+                file.write('<div class="timelinks">\n\n')
                 file.write(dataDict['shownotes'])
-                file.write('\n')
+                file.write('</div>\n\n')
                 file.write('[Back to top](#top)\n')
                 file.write('<a name="transcript"></a>\n')
                 file.write('## Transcript\n')
+                file.write('<div class="timelinks">\n\n')
                 transcriptToText(transcriptPath, dataDict, config, file)
+                file.write('</div>\n\n')
                 file.write('[Back to top](#top)\n')
 
     return writePage

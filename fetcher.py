@@ -98,6 +98,9 @@ class Fetcher(ABC):
         # Add 2 spaces before single lime breaks, so they don't wrap
         shownotes = re.sub(r'([^\n])\n([^\n])', r'\1  \n\2', shownotes)
 
+		# Wrap Time Links in tags
+        shownotes = re.sub(r"^(([0-9]{1,2}:)?[0-9]{2}:[0-9]{2}) *(.*)$", r"<strong>\1</strong> \3", shownotes, flags=re.MULTILINE)
+
         # print('Trimmed shownotes: ', shownotes)
         return shownotes
 
