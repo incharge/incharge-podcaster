@@ -16,7 +16,11 @@ class FetcherPlugin(Fetcher):
             youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
             defaultNamespace = '{http://www.w3.org/2005/Atom}'
 
-            print("Extracting episodes from YouTube feed")
+            onlyNewEpisodes = source['only-new'] if 'only-new' in source else True
+            if onlyNewEpisodes:
+                print("Importing new episodes from YouTube RSS")
+            else:
+                print("Importing all episodes from YouTube RSS")
             for item in root.iter(defaultNamespace + 'entry'):
 
                 title = item.find(defaultNamespace + 'title').text.strip()
@@ -47,7 +51,7 @@ class FetcherPlugin(Fetcher):
                     #    intervieweeFirst.append(interviewee.split()[0])
                     #episode['interviewee-first'] = intervieweeFirst
 
-                    if not self.UpdateEpisodeDatafile(episode, True):
+                    if not self.UpdateEpisodeDatafile(episode, True) and onlyNewEpisodes:
                         print('Done importing from YouTube feed')
                         break
             # print('id=(', item.find('id').text, ')')
