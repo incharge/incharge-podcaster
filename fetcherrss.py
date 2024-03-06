@@ -44,13 +44,13 @@ class FetcherPlugin(Fetcher):
             episodeNo = self.GetEpisodeNo(title)
             if episodeNo != 0:
                 episode = {}
-                episode['title'] = title
-                episode['filename'] = self.NormaliseFilename(title)
+                #episode['title'] = title
+                #episode['filename'] = self.NormaliseFilename(title)
 
-                publishedDate = item.find('pubDate').text
+                #publishedDate = item.find('pubDate').text
                 # episode['spotifypublished'] = publishedDate
-                publishedDate = self.NormaliseDateFormat(publishedDate)
-                episode['published'] = publishedDate
+                #publishedDate = self.NormaliseDateFormat(publishedDate)
+                #episode['published'] = publishedDate
 
                 #episode['id'] = MakeEpisodeId(title, publishedDate)
                 episode['id'] = self.MakeEpisodeId(episodeNo)
@@ -62,17 +62,24 @@ class FetcherPlugin(Fetcher):
                 # # print("guid ", item.find('guid').text)
                 # # print("duration: ", item.find('itunes:duration', itunesNamespace).text)
 
-                if onlyNewEpisodes and not self.UpdateEpisodeDatafile(episode, False):
-                    print('Done importing from RSS')
-                    break
-                else:
+                # If new then submit for transcription, if not new and we only want new then break
+                # ---Condition----     ----Result----
+                # new      onlynew     transcript   break
+                # 0        0           0            0
+                # 0        1           0            1
+                # 1        0           0            0
+                # 1        1           1            0
+                if self.UpdateEpisodeDatafile(episode, False):
                     # Is transcription configured?
-                    if 'transcript-bucket' in self.config and 'audio-bucket' in self.config:
+                    if onlyNewEpisodes and 'transcript-bucket' in self.config and 'audio-bucket' in self.config:
                         # Is there already a remote audio file for this episode?
                         if int(episode['id']) > 900:
                             self.InitiateTranscription(episode['id'], self.config, episode['spotifyAudioUrl'])
                         else:
                             print("WARNING: Re-importing episode from spotify: " + episode['id'])
+                elif onlyNewEpisodes:
+                    print('Done importing from RSS')
+                    break
 
     def fetch(self, source):
         if not 'url' in source:
