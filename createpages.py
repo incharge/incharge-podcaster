@@ -52,17 +52,23 @@ def GeneratePage(episodepath, config):
             yaml.dump(episodeDict, file)
             file.write('---\n')
 
+            # <div> tags require 2 line breaks, otherwise the next line's markup is not processed
             if not os.path.exists(transcriptPath):
+                file.write('<div class="timelinks">\n\n')
                 file.write(dataDict['shownotes'])
+                file.write('</div>\n\n')
             else:
                 file.write('<a name="top"></a>[Jump to transcript](#transcript)\n')
                 file.write('## Show notes\n')
+                file.write('<div class="timelinks">\n\n')
                 file.write(dataDict['shownotes'])
-                file.write('\n')
+                file.write('</div>\n\n')
                 file.write('[Back to top](#top)\n')
                 file.write('<a name="transcript"></a>\n')
                 file.write('## Transcript\n')
+                file.write('<div class="timelinks">\n\n')
                 transcriptToText(transcriptPath, dataDict, config, file)
+                file.write('</div>\n\n')
                 file.write('[Back to top](#top)\n')
 
     return writePage
@@ -94,12 +100,13 @@ def GeneratePages(config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('-f', '--configfile')
     parser.add_argument('-x', '--ignore')
     args = parser.parse_args()
 
-    configfile = open('incharge-podcaster.json', mode='r', encoding='utf-8')
-    config = json.load(configfile)
-    configfile.close
+    configpath = args.configfile if args.configfile else 'incharge-podcaster.json'
+    with open(configpath, mode='r', encoding='utf-8') as configfile:
+        config = json.load(configfile)
 
     # Assign defaults if no folder settings are provided and convert relative to absolute paths
     config['episode-folder'] = os.path.abspath(
@@ -108,5 +115,7 @@ if __name__ == '__main__':
     config['page-folder'] = os.path.abspath(
         config['page-folder'] if 'page-folder' in config else 'page'
     )
+    if not os.path.exists(config['page-folder']):
+        os.makedirs(config['page-folder'])
 
     GeneratePages(config)

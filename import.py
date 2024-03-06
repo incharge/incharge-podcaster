@@ -50,6 +50,7 @@ def fetchSource(name, source, config):
 def importer():
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config')
+    parser.add_argument('-f', '--configfile')
     parser.add_argument('-o', '--override', action='store_true')
     parser.add_argument('-i', '--ignore')
     args = parser.parse_args()
@@ -66,9 +67,10 @@ def importer():
 
     # Load the config file
     if not args.override:
-        if os.path.isfile('incharge-podcaster.json'):
+        configpath = args.configfile if args.configfile else 'incharge-podcaster.json'
+        if os.path.isfile(configpath):
             try:
-                with open('incharge-podcaster.json', mode='r', encoding='utf-8') as configfile:
+                with open(configpath, mode='r', encoding='utf-8') as configfile:
                     # Merge the command-line config so it overwrites any file config
                     config = merge_dicts(json.load(configfile), config)
             except Exception as error:

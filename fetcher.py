@@ -14,6 +14,7 @@ class Fetcher(ABC):
     def fetch(self, source):
         pass
 
+    # Return True if the download succeeds
     def HttpDownload(self, url, path):
         chunk_size = 1024 * 1024
 
@@ -31,8 +32,18 @@ class Fetcher(ABC):
             r.release_conn()
         else:
             print('HTTP request status ' + str(r.status) + ' from url ' + url)
-
         return success
+
+    def HttpDownloadRss(self, url, rsspath):
+        if re.match(r"^https?://", url):
+            print("Download from RSS " + url)
+            if not self.HttpDownload(url, rsspath):
+                rsspath = None
+        else:
+            rsspath = url
+            print("Process local rss file " + rsspath)
+
+        return rsspath
 
     # See regex docs
     # https://docs.python.org/3/library/re.html#re.Match.group
@@ -87,35 +98,38 @@ class Fetcher(ABC):
         # Add 2 spaces before single lime breaks, so they don't wrap
         shownotes = re.sub(r'([^\n])\n([^\n])', r'\1  \n\2', shownotes)
 
-        # print('Trimmed shownotes: ', shownotes)
-        return shownotes
-
-    def TrimShownotesHtml(self, shownotes):
-        # Remove 'Support the channel'
-        # 426+
-        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
-        # Up to 167-391
-        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
-        # 1-145, 392-425
-        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*twitter\.com/TheDissenterYT</a></p>\n", '', shownotes, flags=re.DOTALL)
-
-        # Remove blank lines from the start
-        # \xA0 is utf-8 non-breaking-space
-        shownotes = re.sub(r"^<p>[ -\xA0]*</p>\n", '', shownotes)
-        shownotes = re.sub(r"^<p><br></p>\n", '', shownotes)
-        shownotes = re.sub(r"^\n", '', shownotes)
-
-        # Remove credits from the end
-        shownotes = re.sub(r'<p><a href="">A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
-        shownotes = re.sub(r'<p>A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
-
-        # Remove blank lines from the end
-        shownotes = re.sub(r'<p>[ -]*</p>\n$', '', shownotes, flags=re.DOTALL)
-        # Why doesn't this work? e.g. episode 457
-        shownotes = re.sub(r'\n\n$', '\n', shownotes)
+		# Wrap Time Links in time tags
+        shownotes = re.sub(r"^(([0-9]{1,2}:)?[0-9]{2}:[0-9]{2}) *(.*)$", r"<time>\1</time> \3", shownotes, flags=re.MULTILINE)
 
         # print('Trimmed shownotes: ', shownotes)
         return shownotes
+
+    # def TrimShownotesHtml(self, shownotes):
+    #     # Remove 'Support the channel'
+    #     # 426+
+    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
+    #     # Up to 167-391
+    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
+    #     # 1-145, 392-425
+    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*twitter\.com/TheDissenterYT</a></p>\n", '', shownotes, flags=re.DOTALL)
+
+    #     # Remove blank lines from the start
+    #     # \xA0 is utf-8 non-breaking-space
+    #     shownotes = re.sub(r"^<p>[ -\xA0]*</p>\n", '', shownotes)
+    #     shownotes = re.sub(r"^<p><br></p>\n", '', shownotes)
+    #     shownotes = re.sub(r"^\n", '', shownotes)
+
+    #     # Remove credits from the end
+    #     shownotes = re.sub(r'<p><a href="">A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
+    #     shownotes = re.sub(r'<p>A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
+
+    #     # Remove blank lines from the end
+    #     shownotes = re.sub(r'<p>[ -]*</p>\n$', '', shownotes, flags=re.DOTALL)
+    #     # Why doesn't this work? e.g. episode 457
+    #     shownotes = re.sub(r'\n\n$', '\n', shownotes)
+
+    #     # print('Trimmed shownotes: ', shownotes)
+    #     return shownotes
 
     def MakeSummary(self, summary):
         # Don't use 'RECORDED ON' as the summary
@@ -216,14 +230,14 @@ class Fetcher(ABC):
 
         # Convert punctuation to spaces
         strTitle = re.sub('[!,.?]', ' ', strTitle)
-        # Remove special characters
+        # Remove any remaining special characters (i.e. not alphabetic, numeric, hyphen or space)
         strTitle = re.sub('[^A-Za-z0-9- ]', '', strTitle)
 
         # Remove spaces from the start and end
         strTitle = strTitle.strip()
         # Convert spaces to hyphens
         strTitle = re.sub(' ', '-', strTitle)
-        return strTitle
+        return strTitle.lower()
 
     # https://docs.python.org/3/library/time.html#time.strftime
     # %a  Locale’s abbreviated weekday name.
