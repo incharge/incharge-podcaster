@@ -230,14 +230,14 @@ class Fetcher(ABC):
 
         # Convert punctuation to spaces
         strTitle = re.sub('[!,.?]', ' ', strTitle)
-        # Remove special characters
+        # Remove any remaining special characters (i.e. not alphabetic, numeric, hyphen or space)
         strTitle = re.sub('[^A-Za-z0-9- ]', '', strTitle)
 
         # Remove spaces from the start and end
         strTitle = strTitle.strip()
         # Convert spaces to hyphens
         strTitle = re.sub(' ', '-', strTitle)
-        return strTitle
+        return strTitle.lower()
 
     # https://docs.python.org/3/library/time.html#time.strftime
     # %a  Locale’s abbreviated weekday name.
