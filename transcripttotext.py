@@ -126,7 +126,7 @@ def transcriptToText(inputFilename, dataDict, config, outputfile):
         lines.append({'speaker':speaker, 'line':line,'time':time})
         sorted_lines = sorted(lines,key=lambda k: float(k['time']))
         for line_data in sorted_lines:
-            outputfile.write('**' + str(datetime.timedelta(seconds=int(round(float(line_data['time']))))) + '** ' \
+            outputfile.write('<time>' + str(datetime.timedelta(seconds=int(round(float(line_data['time']))))) + '</time> ' \
                 + speakers[line_data.get('speaker')] + ': ' \
                 + DeUm(line_data.get('line'), ums) \
                 + '\n\n'
