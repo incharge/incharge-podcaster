@@ -19,7 +19,6 @@ class FetcherPlugin(Fetcher):
         Fetcher.__init__(self, config) 
 
     def fetch(self, source):
-
         client = boto3.client('s3')
         response = client.list_objects_v2(Bucket=self.config['transcript-bucket'])
         if response["KeyCount"] > 0:

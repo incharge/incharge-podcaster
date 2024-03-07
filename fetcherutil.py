@@ -15,9 +15,12 @@ def getEpisodeID(filename):
     filename = os.path.basename(filename)
     return re.sub("\.[^.]*", "", filename)
 
-# Get the key of the file matching episodeID in the given bucket, or None if theer isn't one
+# Get the key of the file matching episodeID in the given bucket, or None if there isn't one
 # The filename extension is ignored
 def S3EpisodeExists(episodeID, bucket, client):
+    # See https://www.peterbe.com/plog/fastest-way-to-find-out-if-a-file-exists-in-s3
+    # https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html
+    # There doesn't appear to be a way to filter (e.g. using wildcards)
     response = client.list_objects_v2(Bucket=bucket)
     if response["KeyCount"] > 0:
         for o in response['Contents']:

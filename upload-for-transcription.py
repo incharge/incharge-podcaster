@@ -47,8 +47,8 @@ def upload_file(file_name, bucket, object_name=None):
     return True
 
 
-filename = '908.m4a'
-url = 'https://anchor.fm/s/822ba20/podcast/play/77660635/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2023-9-24%2F3cb74c61-e801-c0ec-04f5-e9088087c404.m4a'
+filename = '516.m4a'
+url = 'https://anchor.fm/s/822ba20/podcast/play/38730559/https%3A%2F%2Fd3ctxlq1ktw2nl.cloudfront.net%2Fstaging%2F2021-7-13%2Fbfa0c886-bad2-996c-7c50-f058142b63bc.m4a'
 
 path = os.path.join('temp', filename)
 download_file(url, path)

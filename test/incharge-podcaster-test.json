@@ -9,8 +9,14 @@
         "Spotify": {
             "type": "rss",
             "url": "incharge-podcaster/test/rss/spotify.xml"
+        },
+        "AWS Transcribe": {
+            "type": "transcript",
+            "ignore": true            
         }
     },
+    "audio-bucket": "thedissenter-episode",
+    "transcript-bucket": "thedissenter-transcript",
     "ums": ["um", "uh", "mhm"],
     "defaults": {
         "interviewer": ["Interviewer"]
