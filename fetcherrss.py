@@ -15,19 +15,21 @@ class FetcherPlugin(Fetcher):
     # 			if remote audio file doesn't exist
     # 				upload to S3
     # 	else - maybe data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
-    def InitiateTranscription(self, episodeID, config, audioUrl):
+    def InitiateTranscription(self, episode):
+        episodeID = episode['id']
+        audioUrl = episode['spotifyAudioUrl']
         # Is there already a local transcript file for this episode?
         if not os.path.isfile( fetcherutil.GetTranscriptPath(episodeID, self.config) ):
             # Is there already a remote transcript file for this episode?
             client = boto3.client('s3')
-            if not fetcherutil.S3EpisodeExists(episodeID, config['transcript-bucket'], client):
+            if not fetcherutil.S3EpisodeExists(episodeID, self.config['transcript-bucket'], client):
                 # Is there already a remote audio file for this episode?
-                if not fetcherutil.S3EpisodeExists(episodeID, config['audio-bucket'], client):
+                if not fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client):
                     filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
                     if count == 0: filename = '.mp3'
-                    filename = str(episodeID) + filename
-                    self.HttpDownload(audioUrl, filename)
-                    client.upload_file(filename, config['audio-bucket'], filename)
+                    filename = str(episodeID) + filename # Add speakers to filename?
+                    path = self.HttpDownloadRss(audioUrl, filename)
+                    client.upload_file(path, self.config['audio-bucket'], filename)
         # else - maybe episode data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
 
     def ExtractSpotify(self, root, source):
@@ -69,12 +71,12 @@ class FetcherPlugin(Fetcher):
                 # 0        1           0            1
                 # 1        0           0            0
                 # 1        1           1            0
-                if self.UpdateEpisodeDatafile(episode, False):
+                if self.UpdateEpisodeDatafile(episode, source["primary"]):
                     # Is transcription configured?
                     if onlyNewEpisodes and 'transcript-bucket' in self.config and 'audio-bucket' in self.config:
                         # Is there already a remote audio file for this episode?
-                        if int(episode['id']) > 900:
-                            self.InitiateTranscription(episode['id'], self.config, episode['spotifyAudioUrl'])
+                        if int(episode['id']) >= 899:
+                            self.InitiateTranscription(episode)
                         else:
                             print("WARNING: Re-importing episode from spotify: " + episode['id'])
                 elif onlyNewEpisodes:

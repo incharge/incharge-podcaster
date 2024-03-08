@@ -76,11 +76,25 @@ def importer():
             except Exception as error:
                 print(f"Error reading the configuration file ({type(error).__name__}): {error}")
                 return
+        elif args.configfile:
+            # A config file was specified on the command line but it doesn't exist
+            print(f"Config file not found: {args.configfile}")
+            return
 
     # Assign default if no episode folder setting is provided and convert relative to absolute path
     config['episode-folder'] = os.path.abspath(
         config['episode-folder'] if 'episode-folder' in config else 'episode'
     )
+
+    # Set config["source"][*]["primary"] on sources for which it is not set
+    isPrimary = False # Assume all sources are primary
+    for name, source in config["source"].items():
+        if "primary" in source:
+            isPrimary = True # One or more sources are primary, so any that are not set are not primary
+            break
+    for name, source in config["source"].items():
+        if not "primary" in source:
+            config["source"][name]["primary"] = False if isPrimary else True
 
     # Process data sources defined in the config file
     for name, source in config["source"].items():

@@ -60,7 +60,7 @@ class FetcherPlugin(Fetcher):
 
                     episode['interviewee'] = self.getSpeakers(title)
 
-                    newepisode = self.UpdateEpisodeDatafile(episode, True)
+                    newepisode = self.UpdateEpisodeDatafile(episode, source["primary"])
                     if onlyNewEpisodes and not newepisode:
                         print('Done importing from YouTube API')
                         break

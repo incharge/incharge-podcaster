@@ -51,7 +51,7 @@ class FetcherPlugin(Fetcher):
                     #    intervieweeFirst.append(interviewee.split()[0])
                     #episode['interviewee-first'] = intervieweeFirst
 
-                    if not self.UpdateEpisodeDatafile(episode, True) and onlyNewEpisodes:
+                    if not self.UpdateEpisodeDatafile(episode, source["primary"]) and onlyNewEpisodes:
                         print('Done importing from YouTube feed')
                         break
             # print('id=(', item.find('id').text, ')')

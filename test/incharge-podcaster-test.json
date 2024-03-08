@@ -8,15 +8,16 @@
         },
         "Spotify": {
             "type": "rss",
-            "url": "incharge-podcaster/test/rss/spotify.xml"
+            "url": "incharge-podcaster/test/rss/spotify.xml",
+            "primary": false
         },
         "AWS Transcribe": {
             "type": "transcript",
             "ignore": true            
         }
     },
-    "audio-bucket": "thedissenter-episode",
-    "transcript-bucket": "thedissenter-transcript",
+    "audio-bucket": "thedissenter-dev-episode",
+    "transcript-bucket": "thedissenter-dev-transcript",
     "ums": ["um", "uh", "mhm"],
     "defaults": {
         "interviewer": ["Interviewer"]

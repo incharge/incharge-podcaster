@@ -176,9 +176,9 @@ class Fetcher(ABC):
 
     # episode is a dictionary containing values to be stored in the data file
     # The dictionary must include id
-    # If isMaster is true then new files are created, otherwise they are only updated
+    # If isPrimary is true then new files are created, otherwise they are only updated
     # Returns True if it's a new episode, indicating that the import process should continue
-    def UpdateEpisodeDatafile(self, episode, isMaster = False):
+    def UpdateEpisodeDatafile(self, episode, isPrimary=True):
         # Truth table showing how inputs determine outputs
         #   -------- Inputs --------|------- Outputs ------
         #   Exists  Changed Master  |   Write   New Episode
@@ -204,7 +204,7 @@ class Fetcher(ABC):
                 msg = 'No changes to'
                 #msg = None
         else:
-            if isMaster:
+            if isPrimary:
                 dataDict = {}
                 msg = 'Creating'
                 if not os.path.isdir(episodefolder):
@@ -213,7 +213,7 @@ class Fetcher(ABC):
                 msg = 'Missing'
 
         if msg: print(msg + ' '  + episodepath)
-        if (episodeExists and episodeChanged) or (not episodeExists and isMaster):
+        if (episodeExists and episodeChanged) or (not episodeExists and isPrimary):
             # Data has changed, so update the data file
             #DumpEpisode(episode, msg, source)
             with open(episodepath, 'w', encoding='utf-8') as file:
