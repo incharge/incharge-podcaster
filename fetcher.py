@@ -104,32 +104,32 @@ class Fetcher(ABC):
         # print('Trimmed shownotes: ', shownotes)
         return shownotes
 
-    # def TrimShownotesHtml(self, shownotes):
-    #     # Remove 'Support the channel'
-    #     # 426+
-    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
-    #     # Up to 167-391
-    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
-    #     # 1-145, 392-425
-    #     shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*twitter\.com/TheDissenterYT</a></p>\n", '', shownotes, flags=re.DOTALL)
+    def TrimShownotesHtml(self, shownotes):
+        # Remove 'Support the channel'
+        # 426+
+        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
+        # Up to 167-391
+        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
+        # 1-145, 392-425
+        shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*twitter\.com/TheDissenterYT</a></p>\n", '', shownotes, flags=re.DOTALL)
 
-    #     # Remove blank lines from the start
-    #     # \xA0 is utf-8 non-breaking-space
-    #     shownotes = re.sub(r"^<p>[ -\xA0]*</p>\n", '', shownotes)
-    #     shownotes = re.sub(r"^<p><br></p>\n", '', shownotes)
-    #     shownotes = re.sub(r"^\n", '', shownotes)
+        # Remove blank lines from the start
+        # \xA0 is utf-8 non-breaking-space
+        shownotes = re.sub(r"^<p>[ -\xA0]*</p>\n", '', shownotes)
+        shownotes = re.sub(r"^<p><br></p>\n", '', shownotes)
+        shownotes = re.sub(r"^\n", '', shownotes)
 
-    #     # Remove credits from the end
-    #     shownotes = re.sub(r'<p><a href="">A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
-    #     shownotes = re.sub(r'<p>A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
+        # Remove credits from the end
+        shownotes = re.sub(r'<p><a href="">A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
+        shownotes = re.sub(r'<p>A HUGE THANK YOU.*$', '', shownotes, flags=re.DOTALL)
 
-    #     # Remove blank lines from the end
-    #     shownotes = re.sub(r'<p>[ -]*</p>\n$', '', shownotes, flags=re.DOTALL)
-    #     # Why doesn't this work? e.g. episode 457
-    #     shownotes = re.sub(r'\n\n$', '\n', shownotes)
+        # Remove blank lines from the end
+        shownotes = re.sub(r'<p>[ -]*</p>\n$', '', shownotes, flags=re.DOTALL)
+        # Why doesn't this work? e.g. episode 457
+        shownotes = re.sub(r'\n\n$', '\n', shownotes)
 
-    #     # print('Trimmed shownotes: ', shownotes)
-    #     return shownotes
+        # print('Trimmed shownotes: ', shownotes)
+        return shownotes
 
     def MakeSummary(self, summary):
         # Don't use 'RECORDED ON' as the summary
