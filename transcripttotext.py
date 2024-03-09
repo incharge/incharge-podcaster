@@ -77,7 +77,8 @@ def transcriptToText(inputFilename, dataDict, config, outputfile):
     # ums = ['um', 'uh', 'mhm']
     ums = config['ums'] if 'ums' in config else None
 
-    episode = [episode for episode in config["episodes"] if episode['id']==dataDict['id']]
+    # If there is episode specific config, and this episode is present, then find it
+    episode = [episode for episode in config["episodes"] if episode['id']==dataDict['id']] if "episodes" in config else []
     # TODO: Check that episode contains 1 item
     if len(episode) == 0:
         # There is no config for this episode. Get the speakers from the title.
