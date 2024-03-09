@@ -18,19 +18,31 @@ class FetcherPlugin(Fetcher):
     def InitiateTranscription(self, episode):
         episodeID = episode['id']
         audioUrl = episode['spotifyAudioUrl']
-        # Is there already a local transcript file for this episode?
-        if not os.path.isfile( fetcherutil.GetTranscriptPath(episodeID, self.config) ):
-            # Is there already a remote transcript file for this episode?
+        path = fetcherutil.GetTranscriptPath(episodeID, self.config)
+        if os.path.isfile(path):
+            # There is already a local transcript file for this episode
+            # Maybe episode data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
+            print(f"Not uploading audio file already transcribed locally: Episode '{episodeID}' in '{path}")
+        else:
             client = boto3.client('s3')
-            if not fetcherutil.S3EpisodeExists(episodeID, self.config['transcript-bucket'], client):
-                # Is there already a remote audio file for this episode?
-                if not fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client):
+            if fetcherutil.S3EpisodeExists(episodeID, self.config['transcript-bucket'], client):
+                # There is already a remote transcript file for this episode
+                print(f"Not uploading audio file already transcribed: Episode '{episodeID}' in bucket '{self.config['audio-transcript']}'")
+            else:
+                if fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client):
+                    # The audio file for this episode has already been uploaded
+                    print(f"Not uploading audio file already uploaded: '{filename}' in bucket '{self.config['audio-bucket']}'")
+                else:
                     filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
                     if count == 0: filename = '.mp3'
-                    filename = str(episodeID) + filename # Add speakers to filename?
+                    speakers = len(episode['interviewee']) + 1 if "interviewee" in episode else 0
+                    filename = \
+                        str(episodeID) \
+                        + (('.' + str(speakers)) if speakers else "") \
+                        + filename
+                    print(f"Uploading audio file for transcription: '{filename}' to bucket '{self.config['audio-bucket']}'")
                     path = self.HttpDownloadRss(audioUrl, filename)
                     client.upload_file(path, self.config['audio-bucket'], filename)
-        # else - maybe episode data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
 
     def ExtractSpotify(self, root, source):
         print("Extracting episodes from Spotify feed")
@@ -46,13 +58,19 @@ class FetcherPlugin(Fetcher):
             episodeNo = self.GetEpisodeNo(title)
             if episodeNo != 0:
                 episode = {}
-                #episode['title'] = title
-                #episode['filename'] = self.NormaliseFilename(title)
 
-                #publishedDate = item.find('pubDate').text
-                # episode['spotifypublished'] = publishedDate
-                #publishedDate = self.NormaliseDateFormat(publishedDate)
-                #episode['published'] = publishedDate
+                if source["primary"]:
+                    episode['title'] = title
+                    episode['filename'] = self.NormaliseFilename(title)
+                    publishedDate = item.find('pubDate').text
+                    # episode['spotifypublished'] = publishedDate
+                    publishedDate = self.NormaliseDateFormat(publishedDate)
+                    episode['published'] = publishedDate
+                    episode['shownotes'] = self.TrimShownotesHtml(item.find('description').text.strip())
+                    episode['filename'] = self.NormaliseFilename(title)
+                    episode['excerpt'] = self.MakeSummary(episode['shownotes'])
+                    episode['image'] = item.find('itunes:image', itunesNamespace).attrib['href']
+                    episode['interviewee'] = self.getSpeakers(title)
 
                 #episode['id'] = MakeEpisodeId(title, publishedDate)
                 episode['id'] = self.MakeEpisodeId(episodeNo)

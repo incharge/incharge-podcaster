@@ -9,11 +9,13 @@ def GetTranscriptPath(episodeID, config, create = False):
         os.makedirs(filepath)
     return os.path.join(filepath, 'transcript.json')
 
-# Get the episode ID from an audi or transcript file on S3
-# i.e. remove the filename extension from 000.json or 000.m4a
+# Get the episode ID from an audio or transcript file
+#   e.g. uploaded to S3: 123.m4a, 123.4.mp3
+# or downloaded from S3: 123.json
 def getEpisodeID(filename):
     filename = os.path.basename(filename)
-    return re.sub("\.[^.]*", "", filename)
+    # Remove everything from the first dot
+    return re.sub("\..*$", "", filename)
 
 # Get the key of the file matching episodeID in the given bucket, or None if there isn't one
 # The filename extension is ignored
