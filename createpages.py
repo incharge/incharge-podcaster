@@ -36,16 +36,12 @@ def GeneratePage(episodepath, config):
     if writePage:
         print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
 
-        # Select the fields to be written to the FrontMatter section
-        episodeDict = {
-            'title': dataDict['title'],
-            'id': dataDict['id'],
-            'publishDate': datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date(),
-            'excerpt': dataDict['excerpt'],
-            'youtubeid': dataDict['youtubeid'],
-            'image': dataDict['image'],
-            'draft': False,        
-        }
+        if 'published' in dataDict:
+            # Convert datetime to date
+            dataDict['publishDate'] = datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date()
+        # Select fields to write to the FrontMatter section, if they exist for this episode
+        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'image') if key in dataDict }
+        episodeDict['draft'] = False
 
         with open(pagepath, 'w', encoding='utf-8') as file:
             file.write('---\n')
