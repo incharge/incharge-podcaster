@@ -8,12 +8,7 @@
 				"s3:DeleteObject"
 			],
 			"Resource": [
-				"arn:aws:s3:::thedissenter-episode/*",
-				"arn:aws:s3:::thedissenter-transcript/*",
-				"arn:aws:s3:::thedissenter-dev-episode/*",
-				"arn:aws:s3:::thedissenter-dev-transcript/*",
-				"arn:aws:s3:::thedissenter-test-episode/*",
-				"arn:aws:s3:::thedissenter-test-transcript/*"
+				"arn:aws:s3:::{bucket}/*"
 			],
 			"Effect": "Allow"
 		},
@@ -22,12 +17,7 @@
 				"s3:ListBucket"
 			],
 			"Resource": [
-				"arn:aws:s3:::thedissenter-episode",
-				"arn:aws:s3:::thedissenter-transcript",
-				"arn:aws:s3:::thedissenter-dev-episode",
-				"arn:aws:s3:::thedissenter-dev-transcript",
-				"arn:aws:s3:::thedissenter-test-episode",
-				"arn:aws:s3:::thedissenter-test-transcript"
+				"arn:aws:s3:::{bucket}"
 			],
 			"Effect": "Allow"
 		}
