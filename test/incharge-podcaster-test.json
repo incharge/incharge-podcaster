@@ -4,20 +4,19 @@
     "source": {
         "Youtube via RSS": {
             "type": "youtube-rss",
-            "url": "incharge-podcaster/test/rss/youtuberss.xml"
+            "url": "incharge-podcaster/test/rss/youtuberss.xml",
+            "primary": true
         },
         "Spotify": {
             "type": "rss",
-            "url": "incharge-podcaster/test/rss/spotify.xml",
-            "primary": false
+            "url": "incharge-podcaster/test/rss/spotify.xml"
         },
         "AWS Transcribe": {
             "type": "transcript",
-            "ignore": true            
+            "primary": true
         }
     },
-    "audio-bucket": "thedissenter-dev-episode",
-    "transcript-bucket": "thedissenter-dev-transcript",
+    "bucket": "thedissenter-dev",
     "ums": ["um", "uh", "mhm"],
     "defaults": {
         "interviewer": ["Interviewer"]
