@@ -25,13 +25,13 @@ class FetcherPlugin(Fetcher):
             print(f"Not uploading audio file already transcribed locally: Episode '{episodeID}' in '{path}")
         else:
             client = boto3.client('s3')
-            if fetcherutil.S3EpisodeExists(episodeID, self.config['transcript-bucket'], client):
+            if fetcherutil.S3EpisodeExists(episodeID, self.config['bucket'], self.config['transcript-prefix'], client):
                 # There is already a remote transcript file for this episode
-                print(f"Not uploading audio file already transcribed: Episode '{episodeID}' in bucket '{self.config['audio-transcript']}'")
+                print(f"Not uploading audio file already transcribed: Episode '{episodeID}' in bucket '{self.config['bucket']}/{self.config['transcript-prefix']}'")
             else:
-                if fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client):
+                if fetcherutil.S3EpisodeExists(episodeID, self.config['bucket'], self.config['audio-prefix'], client):
                     # The audio file for this episode has already been uploaded
-                    print(f"Not uploading audio file already uploaded: '{filename}' in bucket '{self.config['audio-bucket']}'")
+                    print(f"Not uploading audio file already uploaded: '{filename}' in bucket '{self.config['bucket']}/{self.config['audio-prefix']}'")
                 else:
                     filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
                     if count == 0: filename = '.mp3'
@@ -40,9 +40,9 @@ class FetcherPlugin(Fetcher):
                         str(episodeID) \
                         + (('.' + str(speakers)) if speakers else "") \
                         + filename
-                    print(f"Uploading audio file for transcription: '{filename}' to bucket '{self.config['audio-bucket']}'")
+                    print(f"Uploading audio file for transcription: '{filename}' to bucket '{self.config['bucket']}/{self.config['audio-prefix']}'")
                     path = self.HttpDownloadRss(audioUrl, filename)
-                    client.upload_file(path, self.config['audio-bucket'], filename)
+                    client.upload_file(path, self.config['bucket'], self.config['audio-prefix'] + '/' + filename)
 
     def ExtractSpotify(self, root, source):
         print("Extracting episodes from Spotify feed")
@@ -91,7 +91,7 @@ class FetcherPlugin(Fetcher):
                 # 1        1           1            0
                 if self.UpdateEpisodeDatafile(episode, source["primary"]):
                     # Is transcription configured?
-                    if onlyNewEpisodes and 'transcript-bucket' in self.config and 'audio-bucket' in self.config:
+                    if onlyNewEpisodes and 'bucket' in self.config:
                         # Is there already a remote audio file for this episode?
                         if int(episode['id']) >= 899:
                             self.InitiateTranscription(episode)

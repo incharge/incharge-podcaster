@@ -20,7 +20,7 @@ class FetcherPlugin(Fetcher):
 
     def fetch(self, source):
         client = boto3.client('s3')
-        response = client.list_objects_v2(Bucket=self.config['transcript-bucket'])
+        response = client.list_objects_v2(Bucket=self.config['bucket'], Prefix=self.config['transcript-prefix'])
         if response["KeyCount"] > 0:
             for o in response['Contents']:
                 filename = o["Key"]
@@ -46,15 +46,15 @@ class FetcherPlugin(Fetcher):
                     if action > 0:
                         # Download the transcript
                         print('Getting transcript for episode ' + episodeID + ' from ' + filename + ' to ' + filepath)
-                        client.download_file(self.config['transcript-bucket'], filename, filepath)
+                        client.download_file(self.config['bucket'], filename, filepath)
                     elif action < 0:
                         # Delete the remote transcript
                         print('Deleting previously imported transcript for episode ' + episodeID + ' ' + filename)
-                        client.delete_object(Bucket=self.config['transcript-bucket'], Key=filename)
+                        client.delete_object(Bucket=self.config['bucket'], Key=filename)
                         # Delete the remote audio, if it exists
-                        filename = fetcherutil.S3EpisodeExists(episodeID, self.config['audio-bucket'], client)
+                        filename = fetcherutil.S3EpisodeExists(episodeID, self.config['bucket'], self.config['audio-prefix'], client)
                         if filename:
-                            client.delete_object(Bucket=self.config['audio-bucket'], Key=filename)
+                            client.delete_object(Bucket=self.config['bucket'], Key=filename)
                     # else zero action i.e. Do nothing
                 # else - not a transcript file, so ignore it
         # else - There are no transcripts on S3

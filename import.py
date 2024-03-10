@@ -85,8 +85,10 @@ def importer():
     config['episode-folder'] = os.path.abspath(
         config['episode-folder'] if 'episode-folder' in config else 'episode'
     )
+    if 'audio-prefix' not in config: config['audio-prefix'] = 'episode'
+    if 'transcript-prefix' not in config: config['transcript-prefix'] = 'transcript'
 
-    # Set config["source"][*]["primary"] on sources for which it is not set
+    # Set config['source"][*]["primary"] on sources for which it is not set
     isPrimary = False # Assume all sources are primary
     for name, source in config["source"].items():
         if "primary" in source:

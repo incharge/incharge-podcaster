@@ -3,12 +3,30 @@ import uuid
 import re
 import traceback
 
-def getTranscriptionJobArgs(event):
+def removePrefix(key):
+    #parts = key.split('/')
+    #return parts[len(parts)-1]
+    return re.sub(r".*/", '', key)
+
+# Replace from the first dot with .json e.g. xxx.0.mp3 or xxx.mp3 or xxx to xxx.json
+def removeSuffix(key):
+    return re.sub(r"\..*$", '', key)
+
+# Get the maximum number of speakers from the key, if specified, otherwise default to 2
+# e.g. If the file name is xxx.9.mp3, then the number of speakers is 9
+def getSpeakerCount(key):
+    inputKeyParts = key.split('.')
+    return max(
+        int(inputKeyParts[1]) if len(inputKeyParts) > 2 else 0
+        , 2
+    )
+
+def getTranscriptionJobArgs(event, consistent=True):
     try:
         record = event['Records'][0]
         inputBucketName = record['s3']['bucket']['name']
         inputKey = record['s3']['object']['key']
-        print("Processing new audio event...\n" \
+        print("Creating transcription job for new S3 audio file...\n" \
                 f"Input bucket: {inputBucketName} ({type(inputBucketName)}\n"
                 f"Input key: {inputKey} ({type(inputKey)}"
         )
@@ -17,36 +35,23 @@ def getTranscriptionJobArgs(event):
         return None
 
     try:
-        # Replace from the first dot with .json e.g. xxx.0.mp3 or xxx.mp3 or xxx to xxx.json
-        outputKey = re.sub(r"\..*$", '', inputKey) + ".json"
-
-        outputBucketName = re.sub(r"episode$", "transcript", inputBucketName)
-        s3Path = "s3://" + inputBucketName + "/" + inputKey
-        jobName = inputKey + '-' + str(uuid.uuid4())
-
-        # Get the maximum number of speakers from the key, if specified, otherwise default to 2
-        # If the file name is in the format xxx.0.mp3, then the number is the number of speakers
-        inputKeyParts = inputKey.split('.')
-        maxSpeakerLabels = max(
-            int(inputKeyParts[1]) if len(inputKeyParts) > 2 else 0
-            , 2
-        )
+        inputFile = removePrefix(inputKey)
+        outputFile = removeSuffix(inputFile) + '.json'
 
         transcriptionJob = {
-            "TranscriptionJobName": jobName,
-            "OutputKey": outputKey,
-            "LanguageCode" : 'en-US',
-            "MediaFormat": 'mp3',
-            "Media": {
-                'MediaFileUri': s3Path
+            'Media': {
+                'MediaFileUri': 's3://' + inputBucketName + '/' + inputKey
             },
-            "OutputBucketName": outputBucketName,
-            "Settings": {
-                "ShowSpeakerLabels": True,
-                "MaxSpeakerLabels": maxSpeakerLabels
-            }
+            'OutputBucketName': inputBucketName,
+            'OutputKey': 'transcript/' + outputFile,
+            'TranscriptionJobName': outputFile + ('' if consistent else '-' + str(uuid.uuid4())),
+            'Settings': {
+                'ShowSpeakerLabels': True,
+                'MaxSpeakerLabels': getSpeakerCount(inputFile)
+            },
+            'LanguageCode' : 'en-US',
+            'MediaFormat': 'mp3'
         }
-        print(f"Starting transcription job:\n{transcriptionJob}" )
     except Exception as error:
         print(f"Exception processing transcription parameters...\n{traceback.format_exc()}")
         return None
@@ -59,18 +64,19 @@ def lambda_handler(event, context):
     if not transcriptionJob:
         return
 
-    if '-dev-' in transcriptionJob["OutputBucketName"]:
-        print('Not starting transcription job in dev')
+    if transcriptionJob['OutputBucketName'].endswith('-dev'):
+        print('Not starting transcription job in dev\n{transcriptionJob}')
         return
 
     try:
         client = boto3.client('transcribe')
+        print(f"Starting transcription job:\n{transcriptionJob}" )
         response = client.start_transcription_job(**transcriptionJob)
         result = {
             'TranscriptionJobName': response['TranscriptionJob']['TranscriptionJobName']
         }
     except Exception as error:
-        print(f"Exception starting transcription job: config ({type(error).__name__}): {error}")
+        print(f"Exception starting transcription job...\n{traceback.format_exc()}")
         return
 
     return result
