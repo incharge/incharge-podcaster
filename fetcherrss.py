@@ -46,6 +46,9 @@ class FetcherPlugin(Fetcher):
 
     def ExtractSpotify(self, root, source):
         print("Extracting episodes from Spotify feed")
+        transcribeCount = 0
+        maxTranscribeCount = self.config["transcribe-max"]
+
         channel = root.find('channel')
         itunesNamespace = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
         onlyNewEpisodes = source['only-new'] if 'only-new' in source else True
@@ -92,11 +95,11 @@ class FetcherPlugin(Fetcher):
                 if self.UpdateEpisodeDatafile(episode, source["primary"]):
                     # Is transcription configured?
                     if onlyNewEpisodes and 'bucket' in self.config:
-                        # Is there already a remote audio file for this episode?
-                        if int(episode['id']) >= 899:
-                            self.InitiateTranscription(episode)
+                        transcribeCount += 1
+                        if transcribeCount > maxTranscribeCount:
+                            print(f"WARNING: Skipping transcription of episode {episode['id']} due to exceeding maximum of {maxTranscribeCount}")
                         else:
-                            print("WARNING: Re-importing episode from spotify: " + episode['id'])
+                            self.InitiateTranscription(episode)
                 elif onlyNewEpisodes:
                     print('Done importing from RSS')
                     break

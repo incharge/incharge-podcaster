@@ -1,4 +1,5 @@
 {
+    "transcribe-max": 0,
     "episode-folder": "incharge-podcaster/test/result/episode",
     "page-folder": "incharge-podcaster/test/result/md",
     "source": {

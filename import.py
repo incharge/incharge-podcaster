@@ -87,6 +87,7 @@ def importer():
     )
     if 'audio-prefix' not in config: config['audio-prefix'] = 'episode'
     if 'transcript-prefix' not in config: config['transcript-prefix'] = 'transcript'
+    if "transcribe-max" not in config: config["transcribe-max"] = 1
 
     # Set config['source"][*]["primary"] on sources for which it is not set
     isPrimary = False # Assume all sources are primary
