@@ -21,7 +21,10 @@ def getSpeakerCount(key):
         , 2
     )
 
-def getTranscriptionJobArgs(event, consistent=True):
+# Event is an S3 creation event.
+# Returns a dict containing args for a transcription job.
+# Use consistent=True for testing, otherwise the job name includes a guid
+def getTranscriptionJobArgs(event, consistent=False):
     try:
         record = event['Records'][0]
         inputBucketName = record['s3']['bucket']['name']
