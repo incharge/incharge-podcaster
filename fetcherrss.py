@@ -31,7 +31,7 @@ class FetcherPlugin(Fetcher):
             else:
                 if fetcherutil.S3EpisodeExists(episodeID, self.config['bucket'], self.config['audio-prefix'], client):
                     # The audio file for this episode has already been uploaded
-                    print(f"Not uploading audio file already uploaded: '{filename}' in bucket '{self.config['bucket']}/{self.config['audio-prefix']}'")
+                    print(f"Not uploading audio file already uploaded: Episode '{episodeID}' in bucket '{self.config['bucket']}/{self.config['audio-prefix']}'")
                 else:
                     filename, count = re.subn(r'^.*(\.[a-z0-9]+)$', r'\1', audioUrl)
                     if count == 0: filename = '.mp3'
