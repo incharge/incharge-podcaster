@@ -63,6 +63,8 @@ def GeneratePage(episodepath, config):
                 file.write('<a name="transcript"></a>\n')
                 file.write('## Transcript\n')
                 file.write('<div class="timelinks">\n\n')
+                if 'transcript-disclaimer' in config:
+                    file.write(config['transcript-disclaimer'])
                 transcriptToText(transcriptPath, dataDict, config, file)
                 file.write('</div>\n\n')
                 file.write('[Back to top](#top)\n')
