@@ -196,7 +196,9 @@ class Fetcher(ABC):
                 dataDict = yaml.safe_load(file)
                 file.close()
             # Merge so episode overwrites dataDict
-            episode = dataDict | episode
+            # without rebinding the reference to episode
+            # so fields that were read are avaiable to the caller (e.g. interviewee)
+            episode |= (dataDict | episode)
             episodeChanged = episode != dataDict
             if episodeChanged:
                 msg = 'Updating'
