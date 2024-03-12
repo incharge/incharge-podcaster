@@ -11,19 +11,24 @@ export IMPORT_RESULT=UNDEFINED
 RECREATE=false
 #RECREATE=true
 # Commit and push changes?
-#DEPLOY=false
-DEPLOY=true
+if [ "${NODE_ENV:-production}" = "production" ]; then DEPLOY=true; else DEPLOY=false; fi
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
 
-# Don't accidentally commit staged files
+# Don't accidentally commit pre-existing changes
 if $DEPLOY
 then
+    git diff --quiet
+    if [ $? -ne 0 ]
+    then
+        echo "ERROR: There are unstaged changes"
+        exit
+    fi
     git diff --staged --quiet
     if [ $? -ne 0 ]
     then
-        echo "ERROR: There are staged files"
+        echo "ERROR: There are staged changes"
         exit
     fi
 fi
@@ -84,4 +89,6 @@ then
         #git remote -v
         IMPORT_RESULT=PUSHED
     fi
+else
+    echo 'Not checking for changes when not in production.'
 fi
