@@ -94,7 +94,7 @@ def GeneratePages(config):
     if createdCount == 0 and updatedCount == 0:
         print('No pages needed to be created or updated' )
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-f', '--configfile')
     parser.add_argument('-x', '--ignore')
@@ -108,6 +108,10 @@ if __name__ == '__main__':
     config['episode-folder'] = os.path.abspath(
         config['episode-folder'] if 'episode-folder' in config else 'episode'
     )
+    if not os.path.exists(config['episode-folder']):
+        print(f"The episode folder does not exist: {config['episode-folder']}")
+        return
+
     config['page-folder'] = os.path.abspath(
         config['page-folder'] if 'page-folder' in config else 'page'
     )
@@ -115,3 +119,6 @@ if __name__ == '__main__':
         os.makedirs(config['page-folder'])
 
     GeneratePages(config)
+
+if __name__ == '__main__':
+    main()
