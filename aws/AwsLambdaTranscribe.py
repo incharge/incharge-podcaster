@@ -68,7 +68,7 @@ def lambda_handler(event, context):
         return
 
     if transcriptionJob['OutputBucketName'].endswith('-dev'):
-        print('Not starting transcription job in dev\n{transcriptionJob}')
+        print(f"Not starting transcription job in dev\n{transcriptionJob}")
         return
 
     try:
