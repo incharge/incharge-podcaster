@@ -1,6 +1,6 @@
 # Import podcast episodes from rss feeds
 #!/usr/bin/env bash
-ECHO DEBUG01
+echo DEBUG01
 # To help debugging....
 #set -o xtrace
 #clear
@@ -11,13 +11,13 @@ export IMPORT_RESULT=UNDEFINED
 RECREATE=false
 #RECREATE=true
 # Commit and push changes?
-ECHO DEBUG02
+echo DEBUG02
 if [ "${NODE_ENV:-production}" = "production" ]; then DEPLOY=true; else DEPLOY=false; fi
-ECHO DEBUG03
+echo DEBUG03
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
-ECHO DEBUG04
+echo DEBUG04
 
 # Don't accidentally commit pre-existing changes
 if $DEPLOY
@@ -35,7 +35,7 @@ then
         exit
     fi
 fi
-ECHO DEBUG05
+echo DEBUG05
 
 # Import podcast episodes from rss feeds to yaml files
 DATAPATH=$SCRIPT_DIR/../episode
@@ -46,7 +46,7 @@ mkdir -p $DATAPATH
 #     rm -rf $DATAPATH/
 # fi
 
-ECHO DEBUG06
+echo DEBUG06
 if $RECREATE
 then
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
