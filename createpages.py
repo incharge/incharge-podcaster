@@ -39,8 +39,10 @@ def GeneratePage(episodepath, config):
         if 'published' in dataDict:
             # Convert datetime to date
             dataDict['publishDate'] = datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date()
+        if "spotifyAudioUrl" in dataDict:
+            dataDict["audiourl"] = dataDict["spotifyAudioUrl"]
         # Select fields to write to the FrontMatter section, if they exist for this episode
-        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'image') if key in dataDict }
+        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image') if key in dataDict }
         episodeDict['draft'] = False
 
         with open(pagepath, 'w', encoding='utf-8') as file:
