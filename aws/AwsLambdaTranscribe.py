@@ -74,6 +74,7 @@ def lambda_handler(event, context):
     try:
         client = boto3.client('transcribe')
         print(f"Starting transcription job:\n{transcriptionJob}" )
+        # https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/transcribe/client/start_transcription_job.html
         response = client.start_transcription_job(**transcriptionJob)
         result = {
             'TranscriptionJobName': response['TranscriptionJob']['TranscriptionJobName']
