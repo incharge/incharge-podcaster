@@ -4,6 +4,7 @@
 #!/usr/bin/env bash
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 mkdir -p astrowind/src/content/post
+cp categories.yaml astrowind/src/
 cp md/*.md astrowind/src/content/post/  
 cd "$SCRIPT_DIR/../astrowind"
 npm run build
