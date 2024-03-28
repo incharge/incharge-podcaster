@@ -6,6 +6,13 @@
         "Youtube via RSS": {
             "type": "youtube-rss",
             "url": "incharge-podcaster/test/rss/youtuberss.xml",
+            "primary": true,
+            "ignore": true
+        },
+        "Youtube via API": {
+            "type": "youtube-api",
+            "channel": "UCTUcatGD6xu4tAcxG-1D4Bg",
+            "playlist": "UUTUcatGD6xu4tAcxG-1D4Bg",
             "primary": true
         },
         "Spotify": {
