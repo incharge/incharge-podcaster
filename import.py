@@ -98,6 +98,8 @@ def importer():
     for name, source in config["source"].items():
         if not "primary" in source:
             config["source"][name]["primary"] = False if isPrimary else True
+        if not "only-new" in source:
+            config["source"][name]["only-new"] = True
 
     # Process data sources defined in the config file
     for name, source in config["source"].items():

@@ -16,8 +16,7 @@ class FetcherPlugin(Fetcher):
             youtubeNamespace = '{http://www.youtube.com/xml/schemas/2015}'
             defaultNamespace = '{http://www.w3.org/2005/Atom}'
 
-            onlyNewEpisodes = source['only-new'] if 'only-new' in source else True
-            if onlyNewEpisodes:
+            if source['only-new']:
                 print("Importing new episodes from YouTube RSS")
             else:
                 print("Importing all episodes from YouTube RSS")
@@ -51,7 +50,7 @@ class FetcherPlugin(Fetcher):
                     #    intervieweeFirst.append(interviewee.split()[0])
                     #episode['interviewee-first'] = intervieweeFirst
 
-                    if not self.UpdateEpisodeDatafile(episode, source["primary"]) and onlyNewEpisodes:
+                    if not self.UpdateEpisodeDatafile(episode, source["primary"]) and source['only-new']:
                         print('Done importing from YouTube feed')
                         break
             # print('id=(', item.find('id').text, ')')

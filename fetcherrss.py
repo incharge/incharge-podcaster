@@ -51,8 +51,7 @@ class FetcherPlugin(Fetcher):
 
         channel = root.find('channel')
         itunesNamespace = {'itunes': 'http://www.itunes.com/dtds/podcast-1.0.dtd'}
-        onlyNewEpisodes = source['only-new'] if 'only-new' in source else True
-        if onlyNewEpisodes:
+        if source['only-new']:
             print("Importing new episodes from RSS")
         else:
             print("Importing all episodes from RSS")
@@ -94,13 +93,13 @@ class FetcherPlugin(Fetcher):
                 # 1        1           1            0
                 if self.UpdateEpisodeDatafile(episode, source["primary"]):
                     # Is transcription configured?
-                    if onlyNewEpisodes and 'bucket' in self.config:
+                    if source['only-new'] and 'bucket' in self.config:
                         transcribeCount += 1
                         if transcribeCount > maxTranscribeCount:
                             print(f"WARNING: Skipping transcription of episode {episode['id']} due to exceeding maximum of {maxTranscribeCount}")
                         else:
                             self.InitiateTranscription(episode)
-                elif onlyNewEpisodes:
+                elif source['only-new']:
                     print('Done importing from RSS')
                     break
 
