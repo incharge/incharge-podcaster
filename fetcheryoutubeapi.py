@@ -19,7 +19,7 @@ class FetcherPlugin(Fetcher):
 
         youtubeAPI = YouTubeAPI(self.config)
 
-        playlists = YouTubePlaylists(self, youtubeAPI, source['channel'], source['only-new'])
+        playlists = YouTubePlaylists(youtubeAPI, source['channel'], source['only-new'])
         playlists.load()
 
         # Equivalent to: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UUTUcatGD6xu4tAcxG-1D4Bg&key=<SPI_KEY>
@@ -60,7 +60,7 @@ class FetcherPlugin(Fetcher):
 
                     episode['interviewee'] = self.getSpeakers(title)
 
-                    category = playlists.name(episodeNo, episode['youtubeid'])
+                    category = playlists.name(episode['youtubeid'])
                     if category:
                         episode['category'] = category
                     else:

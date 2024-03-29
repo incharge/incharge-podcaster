@@ -2,30 +2,29 @@ import os
 import yaml
 
 class YouTubePlaylists():
-    def __init__(self, fetcher, youtubeAPI, channelId, singleMode = False):
+    def __init__(self, youtubeAPI, channelId, singleMode = False):
         # self.config = config
-        self.fetcher = fetcher
         self.youtubeAPI = youtubeAPI
         self.channelId = channelId
         self.singleMode = singleMode
         # Dictionary of playlistNo: {id, title, count}
         self.playlists = {}
-        # Dictionary of episodeNo: playlistNo
-        self.episodes = {}
+        # Dictionary of videoId: playlistNo
+        self.videos = {}
         self.playlistsChanged = False
 
-    def name(self, episodeNo, videoId):
+    def name(self, videoId):
         if self.singleMode:
             self.getPlaylistItems(videoId)
         # TODO: Re-load the playlists?  Maybe there's a new one
-        return self.playlists[self.episodes[episodeNo]]['title'] if episodeNo in self.episodes else None
+        return self.playlists[self.videos[videoId]]['title'] if videoId in self.videos else None
 
     def confirm(self):
-        if not self.singleMode or len(self.episodes) == 0:
+        if not self.singleMode or len(self.videos) == 0:
             return
-        if len(self.episodes) != 1:
+        if len(self.videos) != 1:
             raise "More than one episode in single mode"
-        playlistNo = next(iter(self.episodes.values()))
+        playlistNo = next(iter(self.videos.values()))
         self.playlists[playlistNo]['count'] += 1
         self.playlistsChanged = True
 
@@ -60,11 +59,11 @@ class YouTubePlaylists():
                 self.playlistsChanged = True
             pageToken = response['nextPageToken'] if 'nextPageToken' in response else None
 
-    def getPlaylistItems(self, videoId = None ):
-        if len(self.playlists) == 0 and videoId:
+    def getPlaylistItems(self, singleVideoId = None ):
+        if len(self.playlists) == 0 and singleVideoId:
             raise 'getPlaylistItems: playlists must be populated in only-new mode'
 
-        self.episodes = {}
+        self.videos = {}
 
         # For each playlist
         for playlistNo, playlist in self.playlists.items():
@@ -73,31 +72,30 @@ class YouTubePlaylists():
             while pageToken is not None:
                 request = self.youtubeAPI.youtube.playlistItems().list(
                     playlistId = playlist['id'],
-                    videoId = videoId if videoId else '',
+                    videoId = singleVideoId if singleVideoId else '',
                     part = 'snippet',
                     maxResults = 50,
                     pageToken = pageToken
                 )
                 response = self.youtubeAPI.execute(request, ['playlistId', 'videoId', 'pageToken'])
                 for item in response['items']:
-                    episodeId = self.fetcher.GetEpisodeNo(item['snippet']['title'])
-                    if episodeId:
-                        if episodeId in self.episodes:
-                            if type(self.episodes[episodeId]) == list:
-                                self.episodes[episodeId].append(playlistNo)
-                            else:
-                                self.episodes[episodeId] = [self.episodes[episodeId], playlistNo]
+                    videoId = item['snippet']['resourceId']['videoId']
+                    if videoId in self.videos:
+                        if type(self.videos[videoId]) == list:
+                            self.videos[videoId].append(playlistNo)
                         else:
-                            self.episodes[episodeId] = playlistNo
-                    if not videoId:
+                            self.videos[videoId] = [self.videos[videoId], playlistNo]
+                    else:
+                        self.videos[videoId] = playlistNo
+                    if not singleVideoId:
                         playlist['count'] += 1
                 pageToken = response['nextPageToken'] if 'nextPageToken' in response else None
 
         # Resolve duplicates
-        for episodeId, playlistNos in self.episodes.items():
+        for videoId, playlistNos in self.videos.items():
             if type(playlistNos) == list:
                 # This episode is on more than one playlist
-                print(f"Episode {episodeId} is in multiple playlists:")
+                print(f"Video {videoId} is in multiple playlists:")
                 selectedPlaylistCount = 0
                 for playlistNo in playlistNos:
                     # Find the playlist with the most videos
@@ -107,14 +105,14 @@ class YouTubePlaylists():
                         selectedPlaylistNo = playlistNo
                         selectedPlaylistCount = playlistCount
                 # This video is being removed from the other playlists, so decrement their counts
-                if not videoId:
+                if not singleVideoId:
                     for playlistNo in playlistNos:
                         if playlistNo != selectedPlaylistNo:
                             self.playlists[playlistNo]['count'] -= 1
-                self.episodes[episodeId] = selectedPlaylistNo
+                self.videos[videoId] = selectedPlaylistNo
 
         # Remove empty playlists
-        if not videoId:
+        if not singleVideoId:
             playlistNos = [playlistNo for playlistNo, playlist in self.playlists.items() if playlist['count'] == 0]
             for playlistNo in playlistNos:
                 del self.playlists[playlistNo]
