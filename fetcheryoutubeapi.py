@@ -1,13 +1,8 @@
 import os
 import sys
-import yaml
-#from datetime import datetime, timezone
 from youtubeplaylists import YouTubePlaylists
+from youtubeapi import YouTubeAPI
 
-# https://pypi.org/project/google-api-python-client/
-# https://github.com/googleapis/google-api-python-client/blob/main/docs/README.md
-from googleapiclient.discovery import build
-#from googleapiclient.errors import HttpError
 
 from fetcher import Fetcher
 
@@ -22,15 +17,14 @@ class FetcherPlugin(Fetcher):
             print("ERROR: Define environment variable: GOOGLE_API_KEY")
             sys.exit(1)
 
-        apiKey = os.environ['GOOGLE_API_KEY']
-        youtube = build('youtube', 'v3', developerKey=apiKey)
+        youtubeAPI = YouTubeAPI(self.config)
 
-        playlists = YouTubePlaylists(self, youtube, source['channel'], source['only-new'])
+        playlists = YouTubePlaylists(self, youtubeAPI, source['channel'], source['only-new'])
         playlists.load()
 
         # Equivalent to: https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=UUTUcatGD6xu4tAcxG-1D4Bg&key=<SPI_KEY>
         # https://googleapis.github.io/google-api-python-client/docs/dyn/youtube_v3.playlistItems.html#list
-        playlistitems_list_request = youtube.playlistItems().list(
+        request = youtubeAPI.youtube.playlistItems().list(
             playlistId = source['playlist'],
             part = 'snippet',
             maxResults = 50
@@ -41,14 +35,13 @@ class FetcherPlugin(Fetcher):
         newepisode = True
         if not source['only-new']:
             print("Importing all episodes")
-        while (not source['only-new'] or newepisode) and playlistitems_list_request:
+        while (not source['only-new'] or newepisode) and request:
             # Fetch the next page
-            playlistitems_list_response = playlistitems_list_request.execute()
-
-            for playlist_item in playlistitems_list_response['items']:
+            response = youtubeAPI.execute(request, ['playlistId', 'pageToken'])
+            for playlist_item in response['items']:
                 title = playlist_item['snippet']['title'].strip()
                 episodeNo = self.GetEpisodeNo(title)
-                if episodeNo != 0: # and episodeNo > 850:
+                if episodeNo != 0:
                     episode = {}
                     episode['id'] = self.MakeEpisodeId(episodeNo)
                     episode['title'] = title
@@ -79,14 +72,10 @@ class FetcherPlugin(Fetcher):
                             playlists.confirm()
                         else:
                             print('Done importing from YouTube API')
-                        break
-
-            # if episodeNo < 850:
-            #     return
-            # else:
+                            break
 
             # Set up the query for the next page
-            playlistitems_list_request = youtube.playlistItems().list_next(
-                playlistitems_list_request, playlistitems_list_response)
+            if not source['only-new'] or newepisode:
+                request = youtubeAPI.youtube.playlistItems().list_next(request, response)
 
         playlists.save()

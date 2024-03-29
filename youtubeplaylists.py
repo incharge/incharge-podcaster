@@ -1,18 +1,11 @@
 import os
-#import sys
 import yaml
-#from datetime import datetime, timezone
-
-# https://pypi.org/project/google-api-python-client/
-# https://github.com/googleapis/google-api-python-client/blob/main/docs/README.md
-#from googleapiclient.discovery import build
-#from googleapiclient.errors import HttpError
 
 class YouTubePlaylists():
-    def __init__(self, fetcher, youtube, channelId, singleMode = False):
+    def __init__(self, fetcher, youtubeAPI, channelId, singleMode = False):
         # self.config = config
         self.fetcher = fetcher
-        self.youtube = youtube
+        self.youtubeAPI = youtubeAPI
         self.channelId = channelId
         self.singleMode = singleMode
         # Dictionary of playlistNo: {id, title, count}
@@ -28,7 +21,7 @@ class YouTubePlaylists():
         return self.playlists[self.episodes[episodeNo]]['title'] if episodeNo in self.episodes else None
 
     def confirm(self):
-        if not self.singleMode or len(self.playlists) == 0:
+        if not self.singleMode or len(self.episodes) == 0:
             return
         if len(self.episodes) != 1:
             raise "More than one episode in single mode"
@@ -38,28 +31,29 @@ class YouTubePlaylists():
 
     def load(self):
         if self.singleMode:
-            self.playlistsFromFile()
+            self.loadFromFile()
             if len(self.playlists) == 0:
                 raise "No playlists"
         else:
             # Get playlists via YouTube API
-            self.playlistsFromYouTube()
+            self.loadFromAPI()
             # Get all PlaylistItems now
             self.getPlaylistItems()
 
-    def playlistsFromYouTube(self):
+    def loadFromAPI(self):
         playlistNo = 1
 
         # Get playlists
         pageToken = ''
         while pageToken is not None:
-            request = self.youtube.playlists().list(
+            request = self.youtubeAPI.youtube.playlists().list(
                 channelId = self.channelId,
                 part = 'snippet',
                 maxResults = 50,
                 pageToken = pageToken
             )
-            response = request.execute()
+            response = self.youtubeAPI.execute(request, ['channelId', 'pageToken'])
+
             for item in response['items']:
                 self.playlists[ playlistNo ] = { 'id': item['id'], 'title': item['snippet']['title'], 'count': 0 }
                 playlistNo += 1
@@ -77,14 +71,14 @@ class YouTubePlaylists():
             # Get the videos for this playlist
             pageToken = ''
             while pageToken is not None:
-                request = self.youtube.playlistItems().list(
+                request = self.youtubeAPI.youtube.playlistItems().list(
                     playlistId = playlist['id'],
                     videoId = videoId if videoId else '',
                     part = 'snippet',
                     maxResults = 50,
                     pageToken = pageToken
                 )
-                response = request.execute()
+                response = self.youtubeAPI.execute(request, ['playlistId', 'videoId', 'pageToken'])
                 for item in response['items']:
                     episodeId = self.fetcher.GetEpisodeNo(item['snippet']['title'])
                     if episodeId:
@@ -125,7 +119,7 @@ class YouTubePlaylists():
             for playlistNo in playlistNos:
                 del self.playlists[playlistNo]
 
-    def playlistsFromFile(self):
+    def loadFromFile(self):
         configpath = 'categories.yaml'
         if os.path.isfile(configpath):
             try:
