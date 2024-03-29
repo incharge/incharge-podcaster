@@ -79,16 +79,17 @@ class YouTubePlaylists():
                 )
                 response = self.youtubeAPI.execute(request, ['playlistId', 'videoId', 'pageToken'])
                 for item in response['items']:
-                    videoId = item['snippet']['resourceId']['videoId']
-                    if videoId in self.videos:
-                        if type(self.videos[videoId]) == list:
-                            self.videos[videoId].append(playlistNo)
+                    if item['snippet']['title'] != "Private video":
+                        videoId = item['snippet']['resourceId']['videoId']
+                        if videoId in self.videos:
+                            if type(self.videos[videoId]) == list:
+                                self.videos[videoId].append(playlistNo)
+                            else:
+                                self.videos[videoId] = [self.videos[videoId], playlistNo]
                         else:
-                            self.videos[videoId] = [self.videos[videoId], playlistNo]
-                    else:
-                        self.videos[videoId] = playlistNo
-                    if not singleVideoId:
-                        playlist['count'] += 1
+                            self.videos[videoId] = playlistNo
+                        if not singleVideoId:
+                            playlist['count'] += 1
                 pageToken = response['nextPageToken'] if 'nextPageToken' in response else None
 
         # Resolve duplicates
@@ -96,12 +97,12 @@ class YouTubePlaylists():
             if type(playlistNos) == list:
                 # This episode is on more than one playlist
                 print(f"Video {videoId} is in multiple playlists:")
-                selectedPlaylistCount = 0
+                selectedPlaylistCount = -1
                 for playlistNo in playlistNos:
                     # Find the playlist with the most videos
                     print(f"\t{self.playlists[playlistNo]['title']}")
                     playlistCount = self.playlists[playlistNo]['count']
-                    if selectedPlaylistCount <= playlistCount:
+                    if selectedPlaylistCount == -1 or selectedPlaylistCount > playlistCount:
                         selectedPlaylistNo = playlistNo
                         selectedPlaylistCount = playlistCount
                 # This video is being removed from the other playlists, so decrement their counts
@@ -122,11 +123,16 @@ class YouTubePlaylists():
         if os.path.isfile(configpath):
             try:
                 with open(configpath, mode='r', encoding='utf-8') as configfile:
-                    self.playlists = yaml.safe_load(configfile)
+                    # Load the list of playlists and convert it to a dict
+                    self.playlists = {index+1: item for index, item in enumerate(yaml.safe_load(configfile)) }
             except Exception as error:
                 print(f"Error reading the playlists file ({type(error).__name__}): {error}")
 
     def save(self):
         if self.playlistsChanged:
-            with open('categories.yaml', mode='w', encoding='utf-8') as configfile:
-                yaml.dump(self.playlists, configfile)
+            try:
+                with open('categories.yaml', mode='w', encoding='utf-8') as configfile:
+                    # Convert the dict to a list and save it
+                    yaml.dump(list(self.playlists.values()), configfile)
+            except Exception as error:
+                print(f"Error writing the playlists file ({type(error).__name__}): {error}")
