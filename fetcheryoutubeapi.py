@@ -27,7 +27,8 @@ class FetcherPlugin(Fetcher):
         request = youtubeAPI.youtube.playlistItems().list(
             playlistId = source['playlist'],
             part = 'snippet',
-            maxResults = 50
+            maxResults = 50,
+            fields = 'items(id,snippet(title,publishedAt,description,resourceId(videoId),thumbnails(maxres(url))))'
         )
 
         print("Extracting episodes via YouTube API")

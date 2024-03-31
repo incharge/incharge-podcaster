@@ -50,7 +50,7 @@ class YouTubeAPI():
                 response = request.execute()
 
             if self.config['test'] == 'save':
-                if response['pageInfo']['totalResults']:
+                if len(response['items']):
                     with open(path, mode='w', encoding='utf-8') as file:
                         json.dump(response, file, indent='\t')
                 elif os.path.exists(path):
