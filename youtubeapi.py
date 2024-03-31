@@ -6,6 +6,7 @@ from urllib.parse import urlparse, parse_qs
 # https://github.com/googleapis/google-api-python-client/blob/main/docs/README.md
 from googleapiclient.discovery import build, Resource
 
+# Construct a filename from the relevant parameters
 def getTestPath(url, testPath, testSet, params):
     urlParts = urlparse(url)
     queryParts = parse_qs(urlParts.query)
@@ -13,6 +14,7 @@ def getTestPath(url, testPath, testSet, params):
     path = os.path.abspath( os.path.join(testPath, testSet, call) )
     filename = ''
     for param in params:
+        # Parameter values are truncated to 34 characters to avoid exceeding maximum length
         filename += (''.join(queryParts[param])[:34] if param in queryParts else '-') + '.'
     if not os.path.exists(path):
         os.makedirs(path)
@@ -39,11 +41,7 @@ class YouTubeAPI():
                     response = {
                         "kind": "youtube#testNotFoundResponse",
                         "etag": "testNotFoundEtag",
-                        "items": [],
-                        "pageInfo": {
-                            "totalResults": 0,
-                            "resultsPerPage": 50
-                        }
+                        "items": []
                     }
             else:
                 # Loading real data that will be saved later as test data
