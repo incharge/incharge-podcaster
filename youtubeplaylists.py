@@ -50,7 +50,7 @@ class YouTubePlaylists():
                 part = 'snippet',
                 maxResults = 50,
                 pageToken = pageToken,
-                fields = 'items(id,snippet(title))'
+                fields = 'nextPageToken,items(id,snippet(title))'
             )
             response = self.youtubeAPI.execute(request, ['channelId', 'pageToken'])
 
@@ -76,7 +76,7 @@ class YouTubePlaylists():
                     videoId = singleVideoId if singleVideoId else '',
                     part = 'snippet',
                     maxResults = 50,
-                    fields = 'items(snippet(title,resourceId(videoId)))',
+                    fields = 'nextPageToken,items(snippet(title,resourceId(videoId)))',
                     pageToken = pageToken
                 )
                 response = self.youtubeAPI.execute(request, ['playlistId', 'videoId', 'pageToken'])
