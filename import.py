@@ -5,6 +5,7 @@ from fetcherrss import FetcherPlugin as FetcherRss
 from fetcheryoutuberss import FetcherPlugin as FetcherYoutubeRss
 from fetcheryoutubeapi import FetcherPlugin as FetcherYoutubeAPI
 from fetchertranscript import FetcherPlugin as FetcherTranscript
+from fetcheritunes import FetcherPlugin as FetcherItunes
 
 # Merge 2 dictionaries recursively, so items in sub-dictionaries are merged
 # If the same item exists in both, enhancer overwrites tgt
@@ -38,6 +39,8 @@ def fetchSource(name, source, config):
             fetcher = FetcherYoutubeRss(config)
     elif source['type'] == 'youtube-api':
         fetcher = FetcherYoutubeAPI(config)
+    elif source['type'] == 'itunes':
+        fetcher = FetcherItunes(config)
     elif source['type'] == 'transcript':
         fetcher = FetcherTranscript(config)
     else:

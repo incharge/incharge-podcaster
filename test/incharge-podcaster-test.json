@@ -1,4 +1,6 @@
 {
+    "xxtest": "load",
+    "test-path": "incharge-podcaster/test",
     "transcribe-max": 0,
     "episode-folder": "incharge-podcaster/test/result/episode",
     "page-folder": "incharge-podcaster/test/result/md",
@@ -13,15 +15,27 @@
             "type": "youtube-api",
             "channel": "UCTUcatGD6xu4tAcxG-1D4Bg",
             "playlist": "UUTUcatGD6xu4tAcxG-1D4Bg",
-            "primary": true
+            "only-new": true,
+            "primary": true,
+            "ignore": true
         },
         "Spotify": {
             "type": "rss",
-            "url": "incharge-podcaster/test/rss/spotify.xml"
+            "url": "incharge-podcaster/test/rss/spotify.xml",
+            "ignore": true,
+            "only-new": false
         },
         "AWS Transcribe": {
             "type": "transcript",
-            "primary": true
+            "primary": true,
+            "ignore": true
+        },
+        "itunes": {
+            "type": "itunes",
+            "primary": false,
+            "ignore": false,
+            "id": 1451347236,
+            "only-new": false
         }
     },
     "bucket": "thedissenter-dev",
