@@ -61,9 +61,9 @@ class FetcherPlugin(Fetcher):
 
                     episode['interviewee'] = self.getSpeakers(title)
 
-                    category = playlists.name(episode['youtubeid'])
-                    if category:
-                        episode['category'] = category
+                    tags = playlists.names(episode['youtubeid'])
+                    if tags:
+                        episode['tags'] = tags
                     else:
                         print(f"Episode {episodeNo} is in no playlists")
 

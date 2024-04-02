@@ -42,7 +42,7 @@ def GeneratePage(episodepath, config):
         if "spotifyAudioUrl" in dataDict:
             dataDict["audiourl"] = dataDict["spotifyAudioUrl"]
         # Select fields to write to the FrontMatter section, if they exist for this episode
-        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'category', 'itunesEpisodeUrl', 'spotifyEpisodeUrl') if key in dataDict }
+        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'tags', 'itunesEpisodeUrl', 'spotifyEpisodeUrl') if key in dataDict }
         episodeDict['draft'] = False
 
         with open(pagepath, 'w', encoding='utf-8') as file:

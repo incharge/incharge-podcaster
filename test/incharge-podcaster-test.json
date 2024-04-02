@@ -1,5 +1,5 @@
 {
-    "xxtest": "load",
+    "test": "load",
     "test-path": "incharge-podcaster/test",
     "transcribe-max": 0,
     "episode-folder": "incharge-podcaster/test/result/episode",
@@ -15,14 +15,14 @@
             "type": "youtube-api",
             "channel": "UCTUcatGD6xu4tAcxG-1D4Bg",
             "playlist": "UUTUcatGD6xu4tAcxG-1D4Bg",
-            "only-new": true,
+            "only-new": false,
             "primary": true,
-            "ignore": true
+            "ignore": false
         },
         "Spotify": {
             "type": "rss",
             "url": "incharge-podcaster/test/rss/spotify.xml",
-            "ignore": true,
+            "ignore": false,
             "only-new": false
         },
         "AWS Transcribe": {

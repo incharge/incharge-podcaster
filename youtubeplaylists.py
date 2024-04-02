@@ -3,30 +3,32 @@ import yaml
 
 class YouTubePlaylists():
     def __init__(self, youtubeAPI, channelId, singleMode = False):
-        # self.config = config
         self.youtubeAPI = youtubeAPI
         self.channelId = channelId
         self.singleMode = singleMode
         # Dictionary of playlistNo: {id, title, count}
         self.playlists = {}
-        # Dictionary of videoId: playlistNo
+        # Dictionary of videoId: [ playlistNo ]
         self.videos = {}
         self.playlistsChanged = False
 
-    def name(self, videoId):
+    def names(self, videoId):
         if self.singleMode:
             self.getPlaylistItems(videoId)
         # TODO: Re-load the playlists?  Maybe there's a new one
-        return self.playlists[self.videos[videoId]]['title'] if videoId in self.videos else None
+        playlistNames = []
+        for playlistNo in self.videos[videoId] if videoId in self.videos else []:
+            playlistNames.append(self.playlists[playlistNo]['title'])
+        return playlistNames
 
-    def confirm(self):
-        if not self.singleMode or len(self.videos) == 0:
-            return
-        if len(self.videos) != 1:
-            raise "More than one episode in single mode"
-        playlistNo = next(iter(self.videos.values()))
-        self.playlists[playlistNo]['count'] += 1
-        self.playlistsChanged = True
+    # def confirm(self):
+    #     if not self.singleMode or len(self.videos) == 0:
+    #         return
+    #     if len(self.videos) != 1:
+    #         raise "More than one episode in single mode"
+    #     playlistNo = next(iter(self.videos.values()))
+    #     self.playlists[playlistNo]['count'] += 1
+    #     self.playlistsChanged = True
 
     def load(self):
         if self.singleMode:
@@ -84,44 +86,42 @@ class YouTubePlaylists():
                     if item['snippet']['title'] != "Private video":
                         videoId = item['snippet']['resourceId']['videoId']
                         if videoId in self.videos:
-                            if type(self.videos[videoId]) == list:
-                                self.videos[videoId].append(playlistNo)
-                            else:
-                                self.videos[videoId] = [self.videos[videoId], playlistNo]
+                            # Add the playlist to the list of playlists that this video is on
+                            self.videos[videoId].append(playlistNo)
                         else:
-                            self.videos[videoId] = playlistNo
-                        if not singleVideoId:
-                            playlist['count'] += 1
+                            # Add this video/playlist to the list of videos
+                            self.videos[videoId] = [ playlistNo ]
+                        playlist['count'] += 1
                 pageToken = response['nextPageToken'] if 'nextPageToken' in response else None
 
-        # Resolve duplicates
-        for videoId, playlistNos in self.videos.items():
-            if type(playlistNos) == list:
-                # This episode is on more than one playlist
-                print(f"Video {videoId} is in multiple playlists:")
-                selectedPlaylistCount = -1
-                for playlistNo in playlistNos:
-                    # Find the playlist with the most videos
-                    print(f"\t{self.playlists[playlistNo]['title']}")
-                    playlistCount = self.playlists[playlistNo]['count']
-                    if selectedPlaylistCount == -1 or selectedPlaylistCount > playlistCount:
-                        selectedPlaylistNo = playlistNo
-                        selectedPlaylistCount = playlistCount
-                # This video is being removed from the other playlists, so decrement their counts
-                if not singleVideoId:
-                    for playlistNo in playlistNos:
-                        if playlistNo != selectedPlaylistNo:
-                            self.playlists[playlistNo]['count'] -= 1
-                self.videos[videoId] = selectedPlaylistNo
+        # # Resolve duplicates
+        # for videoId, playlistNos in self.videos.items():
+        #     if type(playlistNos) == list:
+        #         # This episode is on more than one playlist
+        #         print(f"Video {videoId} is in multiple playlists:")
+        #         selectedPlaylistCount = -1
+        #         for playlistNo in playlistNos:
+        #             # Find the playlist with the most videos
+        #             print(f"\t{self.playlists[playlistNo]['title']}")
+        #             playlistCount = self.playlists[playlistNo]['count']
+        #             if selectedPlaylistCount == -1 or selectedPlaylistCount > playlistCount:
+        #                 selectedPlaylistNo = playlistNo
+        #                 selectedPlaylistCount = playlistCount
+        #         # This video is being removed from the other playlists, so decrement their counts
+        #         if not singleVideoId:
+        #             for playlistNo in playlistNos:
+        #                 if playlistNo != selectedPlaylistNo:
+        #                     self.playlists[playlistNo]['count'] -= 1
+        #         self.videos[videoId] = selectedPlaylistNo
 
-        # Remove empty playlists
-        if not singleVideoId:
-            playlistNos = [playlistNo for playlistNo, playlist in self.playlists.items() if playlist['count'] == 0]
-            for playlistNo in playlistNos:
-                del self.playlists[playlistNo]
+        # # Remove empty playlists
+        # if not singleVideoId:
+        #     playlistNos = [playlistNo for playlistNo, playlist in self.playlists.items() if playlist['count'] == 0]
+        #     for playlistNo in playlistNos:
+        #         del self.playlists[playlistNo]
 
     def loadFromFile(self):
-        configpath = 'categories.yaml'
+        configpath = 'playlists.yaml'
         if os.path.isfile(configpath):
             try:
                 with open(configpath, mode='r', encoding='utf-8') as configfile:
@@ -133,7 +133,7 @@ class YouTubePlaylists():
     def save(self):
         if self.playlistsChanged:
             try:
-                with open('categories.yaml', mode='w', encoding='utf-8') as configfile:
+                with open('playlists.yaml', mode='w', encoding='utf-8') as configfile:
                     # Convert the dict to a list and save it
                     yaml.dump(list(self.playlists.values()), configfile)
             except Exception as error:
