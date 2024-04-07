@@ -68,12 +68,9 @@ class FetcherPlugin(Fetcher):
                         print(f"Episode {episodeNo} is in no playlists")
 
                     newepisode = self.UpdateEpisodeDatafile(episode, source["primary"])
-                    if source['only-new']:
-                        if newepisode:
-                            playlists.confirm()
-                        else:
-                            print('Done importing from YouTube API')
-                            break
+                    if source['only-new'] and not newepisode:
+                        print('Done importing from YouTube API')
+                        break
 
             # Set up the query for the next page
             if not source['only-new'] or newepisode:
