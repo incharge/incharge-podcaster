@@ -4,6 +4,8 @@ import argparse
 import datetime
 import sys
 import json
+# import tscribe - No! No! Noooo! Very very sloooow!
+import webvttUtils
 from transcripttotext import transcriptToText
 
 def eprint(*args, **kwargs):
@@ -18,6 +20,7 @@ def GeneratePage(episodepath, config):
     # Does the page need to be created or updated?
     pagepath = os.path.join(config['page-folder'], dataDict['filename'] + '.md')
     transcriptPath = os.path.join(config['episode-folder'], dataDict['id'], 'transcript.json')
+    vttpath = os.path.join(config['vtt-folder'], dataDict['id'] + '.vtt')
     if os.path.exists(pagepath):
         # The page exists. Does it need to be updated?
         pageModified = os.path.getmtime(pagepath)
@@ -34,15 +37,21 @@ def GeneratePage(episodepath, config):
         writePage = -1      # The episode data is new, so the page needs to be created
 
     if writePage:
-        print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
+        if os.path.exists(transcriptPath):
+            print('Writing captions to ' + vttpath)
+            # tscribe.write(transcriptPath, format="vtt", save_as=vttpath)
+            webvttUtils.writeTranscriptToWebVTT(transcriptPath, 'en', vttpath)
+            dataDict["transcript"] = dataDict['id'] + '.vtt'
 
         if 'published' in dataDict:
             # Convert datetime to date
             dataDict['publishDate'] = datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date()
         if "spotifyAudioUrl" in dataDict:
             dataDict["audiourl"] = dataDict["spotifyAudioUrl"]
+
+        print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
         # Select fields to write to the FrontMatter section, if they exist for this episode
-        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'tags', 'itunesEpisodeUrl', 'spotifyEpisodeUrl') if key in dataDict }
+        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'tags', 'itunesEpisodeUrl', 'spotifyEpisodeUrl', 'transcript') if key in dataDict }
         episodeDict['draft'] = False
 
         with open(pagepath, 'w', encoding='utf-8') as file:
@@ -121,6 +130,12 @@ def main():
     )
     if not os.path.exists(config['page-folder']):
         os.makedirs(config['page-folder'])
+
+    config['vtt-folder'] = os.path.abspath(
+        config['vtt-folder'] if 'vtt-folder' in config else 'vtt'
+    )
+    if not os.path.exists(config['vtt-folder']):
+        os.makedirs(config['vtt-folder'])
 
     GeneratePages(config)
 
