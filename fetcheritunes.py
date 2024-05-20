@@ -31,7 +31,7 @@ class FetcherPlugin(Fetcher):
                         episode['image'] = item['artworkUrl600']
                         episode['interviewee'] = self.getSpeakers(title)
 
-                    episode['id'] = self.MakeEpisodeId(episodeNo)
+                    episode['episodeid'] = self.MakeEpisodeId(episodeNo)
                     #episode['itunesAudioUrl'] = item['episodeUrl']
                     episode['itunesEpisodeUrl'] = item['trackViewUrl']
                     #episode['itunesImageUrl'] = item['artworkUrl600']

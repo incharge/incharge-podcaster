@@ -44,7 +44,7 @@ class FetcherPlugin(Fetcher):
                 episodeNo = self.GetEpisodeNo(title)
                 if episodeNo != 0:
                     episode = {}
-                    episode['id'] = self.MakeEpisodeId(episodeNo)
+                    episode['episodeid'] = self.MakeEpisodeId(episodeNo)
                     episode['title'] = title
 
                     publishedDate = playlist_item['snippet']['publishedAt']

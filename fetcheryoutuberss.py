@@ -26,7 +26,7 @@ class FetcherPlugin(Fetcher):
                 episodeNo = self.GetEpisodeNo(title)
                 if episodeNo != 0:
                     episode = {}
-                    episode['id'] = self.MakeEpisodeId(episodeNo)
+                    episode['episodeid'] = self.MakeEpisodeId(episodeNo)
                     episode['title'] = title
 
                     # 2012-09-10T15:39:02+00:00
@@ -53,7 +53,7 @@ class FetcherPlugin(Fetcher):
                     if not self.UpdateEpisodeDatafile(episode, source["primary"]) and source['only-new']:
                         print('Done importing from YouTube feed')
                         break
-            # print('id=(', item.find('id').text, ')')
+            # print('id=(', item.find('episodeid').text, ')')
             # print('link=(', item.find('link').attrib['href'], ')')
             # print('updated=(', item.find('updated').text, ')')
             # mediaGroup = item.find(mediaNamespace + 'group')

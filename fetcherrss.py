@@ -16,7 +16,7 @@ class FetcherPlugin(Fetcher):
     # 				upload to S3
     # 	else - maybe data file was deleted to force its recreation, so if the transcript remains, it's not intended to be regenerated
     def InitiateTranscription(self, episode):
-        episodeID = episode['id']
+        episodeID = episode['episodeid']
         audioUrl = episode['spotifyAudioUrl']
         path = fetcherutil.GetTranscriptPath(episodeID, self.config)
         if os.path.isfile(path):
@@ -74,8 +74,8 @@ class FetcherPlugin(Fetcher):
                     episode['image'] = item.find('itunes:image', itunesNamespace).attrib['href']
                     episode['interviewee'] = self.getSpeakers(title)
 
-                #episode['id'] = MakeEpisodeId(title, publishedDate)
-                episode['id'] = self.MakeEpisodeId(episodeNo)
+                #episode['episodeid'] = MakeEpisodeId(title, publishedDate)
+                episode['episodeid'] = self.MakeEpisodeId(episodeNo)
 
                 episode['spotifyAudioUrl'] = item.find('enclosure').attrib['url']
                 episode['spotifyEpisodeUrl'] = item.find('link').text
@@ -96,7 +96,7 @@ class FetcherPlugin(Fetcher):
                     if source['only-new'] and 'bucket' in self.config:
                         transcribeCount += 1
                         if transcribeCount > maxTranscribeCount:
-                            print(f"WARNING: Skipping transcription of episode {episode['id']} due to exceeding maximum of {maxTranscribeCount}")
+                            print(f"WARNING: Skipping transcription of episode {episode['episodeid']} due to exceeding maximum of {maxTranscribeCount}")
                         else:
                             self.InitiateTranscription(episode)
                 elif source['only-new']:
