@@ -19,8 +19,8 @@ def GeneratePage(episodepath, config):
 
     # Does the page need to be created or updated?
     pagepath = os.path.join(config['page-folder'], dataDict['filename'] + '.md')
-    transcriptPath = os.path.join(config['episode-folder'], dataDict['id'], 'transcript.json')
-    vttpath = os.path.join(config['vtt-folder'], dataDict['id'] + '.vtt')
+    transcriptPath = os.path.join(config['episode-folder'], dataDict['episodeid'], 'transcript.json')
+    vttpath = os.path.join(config['vtt-folder'], dataDict['episodeid'] + '.vtt')
     if os.path.exists(pagepath):
         # The page exists. Does it need to be updated?
         pageModified = os.path.getmtime(pagepath)
@@ -41,7 +41,7 @@ def GeneratePage(episodepath, config):
             print('Writing captions to ' + vttpath)
             # tscribe.write(transcriptPath, format="vtt", save_as=vttpath)
             webvttUtils.writeTranscriptToWebVTT(transcriptPath, 'en', vttpath)
-            dataDict["transcript"] = dataDict['id'] + '.vtt'
+            dataDict["vtt"] = dataDict['episodeid'] + '.vtt'
 
         if 'published' in dataDict:
             # Convert datetime to date
@@ -51,7 +51,7 @@ def GeneratePage(episodepath, config):
 
         print(('Creating' if writePage < 0 else 'Updating') + ' ' + pagepath)
         # Select fields to write to the FrontMatter section, if they exist for this episode
-        episodeDict = { key: dataDict[key] for key in ('title', 'id', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'tags', 'itunesEpisodeUrl', 'spotifyEpisodeUrl', 'transcript') if key in dataDict }
+        episodeDict = { key: dataDict[key] for key in ('title', 'episodeid', 'publishDate', 'excerpt', 'youtubeid', 'audiourl', 'image', 'tags', 'itunesEpisodeUrl', 'spotifyEpisodeUrl', 'transcript', 'vtt') if key in dataDict }
         episodeDict['draft'] = False
 
         with open(pagepath, 'w', encoding='utf-8') as file:
