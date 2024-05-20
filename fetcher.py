@@ -171,7 +171,7 @@ class Fetcher(ABC):
     # https://i.ytimg.com/vi/dzbIk_j9tkKg/maxresdefault.jpg
     def NormaliseImageUrl(self, url):
         url = re.sub(r'^(https://i)[0-9]+(\.ytimg\.com/)', r'\1\2', url)
-        url = re.sub(r'^(https://i.ytimg.com/vi/[^/]+)/hqdefault\.jpg$', r'\1/maxresdefault.jpg', url)
+        url = re.sub(r'^(https://i.ytimg.com/)[^/]+/([^/]+)/hqdefault\.jpg$', r'\1/vi_webp/\2/mqdefault.webp', url)
         return url
 
     # episode is a dictionary containing values to be stored in the data file
