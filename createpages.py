@@ -1,4 +1,3 @@
-import yaml
 import os
 import argparse
 import datetime
@@ -14,7 +13,7 @@ def eprint(*args, **kwargs):
 def GeneratePage(episodepath, config):
     # Get the episode data
     with open(episodepath, 'r', encoding='utf-8') as file:
-        dataDict = yaml.safe_load(file)
+        dataDict = json.load(file)
         file.close()
 
     # Does the page need to be created or updated?
@@ -45,7 +44,8 @@ def GeneratePage(episodepath, config):
 
         if 'published' in dataDict:
             # Convert datetime to date
-            dataDict['publishDate'] = datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d").date()
+            # dataDict['publishDate'] = datetime.datetime.strptime(dataDict['published'], "%Y-%m-%d")
+            dataDict['publishDate'] = dataDict["published"]
         if "spotifyAudioUrl" in dataDict:
             dataDict["audiourl"] = dataDict["spotifyAudioUrl"]
 
@@ -56,8 +56,8 @@ def GeneratePage(episodepath, config):
 
         with open(pagepath, 'w', encoding='utf-8') as file:
             file.write('---\n')
-            yaml.dump(episodeDict, file)
-            file.write('---\n')
+            json.dump(episodeDict, file, indent='\t')
+            file.write('\n---\n')
 
             # <div> tags require 2 line breaks, otherwise the next line's markup is not processed
             if not os.path.exists(transcriptPath):
@@ -89,7 +89,7 @@ def GeneratePages(config):
     print(f"Generating pages from {config['episode-folder']} to {config['page-folder']}")
     with os.scandir(config['episode-folder']) as episodes:
         for episode in episodes:
-            episodepath = os.path.join(config['episode-folder'], episode.name, 'episode.yaml')
+            episodepath = os.path.join(config['episode-folder'], episode.name, 'episode.json')
             # os.episode.name.endswith('.yaml')
             if os.path.exists(episodepath):
                 writePage = GeneratePage(episodepath, config)

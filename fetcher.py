@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from abc import ABC, abstractmethod
 import urllib3
-import yaml
+import json
 import xml.etree.ElementTree as et # See https://docs.python.org/3/library/xml.etree.elementtree.html
 
 class Fetcher(ABC):
@@ -48,8 +48,6 @@ class Fetcher(ABC):
     # See regex docs
     # https://docs.python.org/3/library/re.html#re.Match.group
     # https://docs.python.org/3/library/re.html#re.sub
-    # PyYaml
-    # https://pyyaml.org/wiki/PyYAMLDocumentation
 
     # Return a list of speaker names, extracted from the title
     def getSpeakers(self, title):
@@ -188,12 +186,12 @@ class Fetcher(ABC):
         #   Y       Y       x       |   Y       Y
 
         # Get the existing episode data
-        episodefolder = os.path.join(self.config['episode-folder'], episode['id'])
-        episodepath = os.path.join(episodefolder, 'episode.yaml')
+        episodefolder = os.path.join(self.config['episode-folder'], episode['episodeid'])
+        episodepath = os.path.join(episodefolder, 'episode.json')
         episodeExists = os.path.isfile(episodepath)
         if episodeExists:
             with open(episodepath, 'r', encoding='utf-8') as file:
-                dataDict = yaml.safe_load(file)
+                dataDict = json.load(file)
                 file.close()
             # Merge so episode overwrites dataDict
             # without rebinding the reference to episode
@@ -219,7 +217,7 @@ class Fetcher(ABC):
             # Data has changed, so update the data file
             #DumpEpisode(episode, msg, source)
             with open(episodepath, 'w', encoding='utf-8') as file:
-                yaml.dump(episode, file)
+                json.dump(episode, file, indent='\t')
                 file.close()
 
         return not episodeExists or episodeChanged
