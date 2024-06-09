@@ -56,7 +56,8 @@ then
     echo "Removing existing .md files from $SITEPATH"
     rm $SITEPATH/*.md
 fi
-python $SCRIPT_DIR/createpages.py
+node node_modules/@incharge/transcript-cli/bin/cli.mjs createic
+node node_modules/@incharge/transcript-cli/bin/cli.mjs createpages
 
 if [ $? -ne 0 ]
 then
