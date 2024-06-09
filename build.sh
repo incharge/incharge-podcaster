@@ -8,9 +8,9 @@ echo Copying .md files
 mkdir -p astrowind/src/content/post
 cp md/*.md astrowind/src/content/post/  
 
-echo Copying .vtt files
+echo Copying transcript files
 mkdir -p astrowind/public/transcript
-cp vtt/*.vtt astrowind/public/transcript/
+cp transcript/* astrowind/public/transcript/
 cp playlists.yaml astrowind/src/
 
 echo Building Astro
