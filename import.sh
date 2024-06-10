@@ -38,8 +38,10 @@ mkdir -p $DATAPATH
 if $RECREATE
 then
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
-else
+elif $DEPLOY
     python $SCRIPT_DIR/import.py
+else
+    python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": true }}}"
 fi
 
 if [ $? -ne 0 ]
