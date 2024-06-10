@@ -77,7 +77,9 @@ class Fetcher(ABC):
 
     def TrimShownotes(self, shownotes):
         # Remove 'Support the channel'
-        # 426+
+        # 950+
+        shownotes = re.sub(r"^[\*\-]+Support the channel[\*\-]+$.*enlites\.com/\n", '', shownotes, flags=re.DOTALL | re.MULTILINE)
+        # 426-949
         shownotes = re.sub(r"------------------Support the channel------------.*enlites\.com/\n", '', shownotes, flags=re.DOTALL)
         # Up to 167-391
         shownotes = re.sub(r"------------------Support the channel------------.*anchor\.fm/thedissenter\n", '', shownotes, flags=re.DOTALL)
@@ -104,7 +106,9 @@ class Fetcher(ABC):
 
     def TrimShownotesHtml(self, shownotes):
         # Remove 'Support the channel'
-        # 426+
+        # 950+
+        shownotes = re.sub(r"<p>[\*\-]+Support the channel[\*\-]+</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
+        # 426 to 949
         shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*enlites\.com/</a></p>\n", '', shownotes, flags=re.DOTALL)
         # Up to 167-391
         shownotes = re.sub(r"<p>------------------Support the channel------------</p>.*anchor\.fm/thedissenter</a></p>\n", '', shownotes, flags=re.DOTALL)
