@@ -35,14 +35,17 @@ mkdir -p $DATAPATH
 #     rm -rf $DATAPATH/
 # fi
 
+echo "NODE_ENV=${NODE_ENV}"
 if $RECREATE
 then
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
 elif $DEPLOY
 then
     python $SCRIPT_DIR/import.py
+    echo "Import WITH transcribe"
 else
-    python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": true }}}"
+    echo "Import WITHOUT transcribe"
+    python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": True }}}"
 fi
 
 if [ $? -ne 0 ]
