@@ -39,6 +39,7 @@ if $RECREATE
 then
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
 elif $DEPLOY
+then
     python $SCRIPT_DIR/import.py
 else
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": true }}}"
