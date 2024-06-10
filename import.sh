@@ -11,6 +11,7 @@ RECREATE=false
 #RECREATE=true
 # Commit and push changes?
 if [ "${NODE_ENV:-production}" = "production" ]; then DEPLOY=true; else DEPLOY=false; fi
+echo "Running in ${NODE_ENV} mode"
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
@@ -35,16 +36,14 @@ mkdir -p $DATAPATH
 #     rm -rf $DATAPATH/
 # fi
 
-echo "NODE_ENV=${NODE_ENV}"
 if $RECREATE
 then
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"Youtube via API\": { \"ignore\": False }}}"
 elif $DEPLOY
 then
     python $SCRIPT_DIR/import.py
-    echo "Import WITH transcribe"
 else
-    echo "Import WITHOUT transcribe"
+    echo "Import without transcription id dev mode"
     python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": True }}}"
 fi
 
