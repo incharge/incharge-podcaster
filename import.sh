@@ -74,6 +74,7 @@ then
     # If there are changes then commit them
     git add "$DATAPATH"
     git add "$SITEPATH"
+    git add "transcript"
     if git diff --staged --quiet
     then
         echo "No changes"
