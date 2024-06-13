@@ -43,8 +43,7 @@ elif $DEPLOY
 then
     python $SCRIPT_DIR/import.py
 else
-    echo "Import without transcription id dev mode"
-    python $SCRIPT_DIR/import.py "--config={ \"source\": { \"AWS Transcribe\": { \"ignore\": True }}}"
+    python $SCRIPT_DIR/import.py "--config={ \"bucket\": \"thedissenter-dev\" }"
 fi
 
 if [ $? -ne 0 ]
@@ -53,7 +52,7 @@ then
     exit
 fi
 
-# Process yaml files into md files
+# Process episode json files into md files
 SITEPATH=$SCRIPT_DIR/../md
 mkdir -p $SITEPATH
 if $RECREATE && ls SITEPATH/*.md >/dev/null 2>&1
