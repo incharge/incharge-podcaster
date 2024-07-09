@@ -4,9 +4,9 @@
 # set -o xtrace
 #clear
 
-# .github/workflows/import.yaml calls ./.github/workflows/hugo.yaml if IMPORT_RESULT=PUSHED
+# .github/workflows/import.yaml calls ./.github/workflows/build.yaml if IMPORT_RESULT=PUSHED
 export IMPORT_RESULT=UNDEFINED
-# Recreate all files from scratch.  All existing episode .yaml an .md files are deleted before recreating
+# Recreate all files from scratch.  All existing episode .json and .md files are deleted before recreating
 RECREATE=false
 #RECREATE=true
 # Commit and push changes?
@@ -15,6 +15,8 @@ echo "Running in ${NODE_ENV} mode"
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
+
+starttime=$(date +"%Y-%m-%dT%H:%M:%S%:z")
 
 # Don't accidentally commit pre-existing changes
 if $DEPLOY
@@ -27,7 +29,7 @@ then
     fi
 fi
 
-# Import podcast episodes from rss feeds to yaml files
+# Import podcast episodes from rss feeds to json files
 DATAPATH=$SCRIPT_DIR/../episode
 mkdir -p $DATAPATH
 # if $RECREATE
@@ -61,7 +63,7 @@ then
     rm $SITEPATH/*.md
 fi
 node node_modules/@incharge/transcript-cli/bin/cli.mjs createic
-node node_modules/@incharge/transcript-cli/bin/cli.mjs createpages
+node node_modules/@incharge/transcript-cli/bin/cli.mjs createpages "--starttime=$starttime"
 
 if [ $? -ne 0 ]
 then
