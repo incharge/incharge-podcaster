@@ -16,7 +16,7 @@ echo "Running in ${NODE_ENV} mode"
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR/.."
 
-starttime=$(date +"%Y-%m-%dT%H:%M:%S%:z")
+starttime=$(date +"%Y-%m-%dT%H:%M:%S")
 
 # Don't accidentally commit pre-existing changes
 if $DEPLOY
